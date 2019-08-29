@@ -1,0 +1,31 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Intellij file
+.DS_Store
+.idea/
+
+test/bddtests/fixtures/fabric/crypto-config/
+test/bddtests/fixtures/fabric/channel/
+docker-compose.log
+
+docs/build
+.build
+
+coverage.txt
