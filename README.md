@@ -1,19 +1,17 @@
-[![Release](https://img.shields.io/github/release/trustbloc/fabric-peer-ext.svg?style=flat-square)](https://github.com/trustbloc/fabric-peer-ext/releases/latest)
+[![Release](https://img.shields.io/github/release/trustbloc/fabric-peer-ext.svg?style=flat-square)](https://github.com/trustbloc/fabric-cli-ext/releases/latest)
 
-[![codecov](https://codecov.io/gh/trustbloc/fabric-peer-ext/branch/master/graph/badge.svg)](https://codecov.io/gh/trustbloc/fabric-peer-ext)
-[![Go Report Card](https://goreportcard.com/badge/github.com/trustbloc/fabric-peer-ext?style=flat-square)](https://goreportcard.com/report/github.com/trustbloc/fabric-peer-ext)
-[![codebeat badge](https://codebeat.co/badges/fad74203-ae47-4acf-a0be-dc22696df874)](https://codebeat.co/projects/github-com-trustbloc-fabric-peer-ext-master)
-[![GolangCI](https://golangci.com/badges/github.com/trustbloc/fabric-peer-ext.svg)](https://golangci.com/r/github.com/trustbloc/fabric-peer-ext)
+[![codecov](https://codecov.io/gh/trustbloc/fabric-cli-ext/branch/master/graph/badge.svg)](https://codecov.io/gh/trustbloc/fabric-cli-ext)
+[![Go Report Card](https://goreportcard.com/badge/github.com/trustbloc/fabric-cli-ext?style=flat-square)](https://goreportcard.com/report/github.com/trustbloc/fabric-cli-ext)
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://raw.githubusercontent.com/trustbloc/fabric-peer-ext/master/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://raw.githubusercontent.com/trustbloc/fabric-cli-ext/master/LICENSE)
 
-# fabric-peer-ext
-Set of libraries that extends the core peer capabilities.
+# fabric-cli-ext
+Command-line interface that extends Fabric's CLI.
 
 ```
-git clone https://github.com/trustbloc/fabric-peer-ext.git
+git clone https://github.com/trustbloc/fabric-cli-ext.git
 
-cd fabric-peer-ext
+cd fabric-cli-ext
 
 # run linters
 make checks
