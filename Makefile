@@ -24,7 +24,7 @@ lint:
 license: version
 	@scripts/check_license.sh
 
-all: checks unit-test
+all: clean checks plugins unit-test
 
 unit-test:
 	@scripts/unit.sh
@@ -32,4 +32,10 @@ unit-test:
 version:
 	@scripts/check_version.sh
 
-.PHONY: all version unit-test license
+plugins:
+	@scripts/build_plugins.sh
+
+clean:
+	rm -rf ./.build
+
+.PHONY: all version unit-test license plugins clean

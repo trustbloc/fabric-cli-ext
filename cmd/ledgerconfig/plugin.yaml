@@ -1,0 +1,8 @@
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: ledgerconfig
+usage: ledgerconfig
+description: Manages configuration stored in the ledger
+command: ${FABRIC_HOME}/plugins/ledgerconfig/ledgerconfig.so
