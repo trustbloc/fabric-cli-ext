@@ -9,6 +9,7 @@ package main
 import (
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 	"github.com/spf13/cobra"
+	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/querycmd"
 )
 
 const (
@@ -18,7 +19,7 @@ const (
 )
 
 // New is the entry point to the ledgerconfig plugin
-func New(*environment.Settings) *cobra.Command {
+func New(settings *environment.Settings) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   use,
 		Short: desc,
@@ -27,5 +28,8 @@ func New(*environment.Settings) *cobra.Command {
 			cmd.HelpFunc()(cmd, args)
 		},
 	}
+	cmd.AddCommand(
+		querycmd.New(settings),
+	)
 	return cmd
 }
