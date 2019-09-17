@@ -10,6 +10,7 @@ import (
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/querycmd"
+	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/updatecmd"
 )
 
 const (
@@ -30,6 +31,7 @@ func New(settings *environment.Settings) *cobra.Command {
 	}
 	cmd.AddCommand(
 		querycmd.New(settings),
+		updatecmd.New(settings),
 	)
 	return cmd
 }

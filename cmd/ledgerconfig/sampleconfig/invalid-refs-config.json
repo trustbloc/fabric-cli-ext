@@ -1,0 +1,11 @@
+{
+  "MspID": "Org1MSP",
+  "Apps": [
+    {
+      "AppName": "app1",
+      "Version": "1",
+      "Format": "JSON",
+      "Config": "file://./file-not-there.json"
+    }
+  ]
+}

@@ -27,5 +27,7 @@ func TestNew(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure that the query command was added
-	require.Contains(t, w.Written(), "Query ledger configurationFlags")
+	require.Contains(t, w.Written(), "Query ledger configuration")
+	// Make sure that the update command was added
+	require.Contains(t, w.Written(), "Update ledger configuration")
 }

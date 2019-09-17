@@ -13,11 +13,15 @@ import (
 // Writer captures the written bytes so that they may be examined in unit tests
 type Writer struct {
 	Bytes []byte
+	Err   error
 }
 
 // Write saves the given bytes
 func (w *Writer) Write(p []byte) (int, error) {
-	w.Bytes = p
+	if w.Err != nil {
+		return 0, w.Err
+	}
+	w.Bytes = append(w.Bytes, p...)
 	return len(p), nil
 }
 

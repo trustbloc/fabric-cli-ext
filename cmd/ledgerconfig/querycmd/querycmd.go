@@ -115,6 +115,7 @@ func newCmd(settings *environment.Settings, p common.FactoryProvider) *cobra.Com
 
 	c.Settings = settings
 	cmd.SetOutput(c.Settings.Streams.Out)
+	cmd.SilenceUsage = true
 
 	cmd.Flags().StringVar(&c.criteriaStr, criteriaFlag, "", criteriaUsage)
 	cmd.Flags().StringVar(&c.mspID, mspIDFlag, "", mspIDUsage)
