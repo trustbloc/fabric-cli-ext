@@ -7,9 +7,11 @@
 #
 # Supported Targets:
 #
+# all:                        runs checks, unit tests, and builds the plugins
 # unit-test:                  runs unit tests
 # lint:                       runs linters
 # checks:                     runs code checks
+# generate:                   generates mocks
 #
 
 # Local variables used by makefile
@@ -38,4 +40,7 @@ plugins:
 clean:
 	rm -rf ./.build
 
-.PHONY: all version unit-test license plugins clean
+generate:
+	go generate ./...
+
+.PHONY: all version unit-test license plugins clean generate
