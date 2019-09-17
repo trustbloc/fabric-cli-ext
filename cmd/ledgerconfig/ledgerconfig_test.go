@@ -30,4 +30,6 @@ func TestNew(t *testing.T) {
 	require.Contains(t, w.Written(), "Query ledger configuration")
 	// Make sure that the update command was added
 	require.Contains(t, w.Written(), "Update ledger configuration")
+	// Make sure that the delete command was added
+	require.Contains(t, w.Written(), "Delete ledger configuration")
 }

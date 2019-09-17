@@ -20,43 +20,6 @@ import (
 	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/mocks"
 )
 
-func TestQueryCmd_InvalidOptions(t *testing.T) {
-	t.Run("No options", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, &mocks.Writer{}, nil).Execute(), errMspOrCriteriaRequired)
-	})
-
-	t.Run("--mspid with --criteria", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, &mocks.Writer{}, nil, "--mspid", "MSP1", "--criteria", "{}").Execute(), errCriteriaMustBeAlone)
-	})
-
-	t.Run("--peerid with --criteria", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, &mocks.Writer{}, nil, "--peerid", "peer1", "--criteria", "{}").Execute(), errCriteriaMustBeAlone)
-	})
-
-	t.Run("--appname with --criteria", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, &mocks.Writer{}, nil, "--appname", "app1", "--criteria", "{}").Execute(), errCriteriaMustBeAlone)
-	})
-
-	t.Run("--appver with --criteria", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, &mocks.Writer{}, nil, "--appver", "v1", "--criteria", "{}").Execute(), errCriteriaMustBeAlone)
-	})
-
-	t.Run("--componentname with --criteria", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, &mocks.Writer{}, nil, "--componentname", "comp1", "--criteria", "{}").Execute(), errCriteriaMustBeAlone)
-	})
-
-	t.Run("--componentver with --criteria", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, &mocks.Writer{}, nil, "--componentver", "v1", "--criteria", "{}").Execute(), errCriteriaMustBeAlone)
-	})
-
-	t.Run("Invalid --criteria", func(t *testing.T) {
-		c := newMockCmd(t, &mocks.Writer{}, nil, "--criteria", "xxx")
-		err := c.Execute()
-		require.Error(t, err)
-		require.Contains(t, err.Error(), errInvalidCriteria)
-	})
-}
-
 func TestQueryCmd_InitializeError(t *testing.T) {
 	t.Run("With channel error", func(t *testing.T) {
 		errExpected := errors.New("channel error")

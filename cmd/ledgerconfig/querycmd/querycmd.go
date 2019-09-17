@@ -7,11 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package querycmd
 
 import (
-	"encoding/json"
-
 	"github.com/hyperledger/fabric-cli/pkg/environment"
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/common"
 )
@@ -60,45 +56,13 @@ If PeerID and AppName are not specified then all of the MSP's configuration is r
 `
 )
 
-const (
-	criteriaFlag  = "criteria"
-	criteriaUsage = `The search criteria in JSON format. Example: --criteria '{"MspID":"Org1MSP","PeerID":"peer0.org1.com","AppName":"app1","AppVersion":"v1","ComponentName":"comp1","ComponentVersion":"v1"}'`
-
-	mspIDFlag  = "mspid"
-	mspIDUsage = `The ID of the MSP. Example: --mspid Org1MSP`
-
-	peerIDFlag  = "peerid"
-	peerIDUsage = "The ID of the peer to query for. Example: --peerid peer0.org1.com"
-
-	appNameFlag  = "appname"
-	appNameUsage = "The name of the application to query for. Example: --appname app1"
-
-	appVerFlag  = "appver"
-	appVerUsage = "The app version. Example: --appver v1"
-
-	componentNameFlag  = "componentname"
-	componentNameUsage = "The name of the component to query for. Example: --componentname comp1"
-
-	componentVerFlag  = "componentver"
-	componentVerUsage = "The component version. Example: --componentver v1"
-)
-
-var (
-	errMspOrCriteriaRequired = "either --criteria or (at least) --mspid must be specified"
-	errCriteriaMustBeAlone   = "other options cannot be used along with --criteria"
-	errInvalidCriteria       = "invalid criteria"
-)
-
 // New returns the ledger config query command
 func New(settings *environment.Settings) *cobra.Command {
 	return newCmd(settings, nil)
 }
 
 func newCmd(settings *environment.Settings, p common.FactoryProvider) *cobra.Command {
-	c := &command{
-		BaseCommand: common.NewBaseCmd(settings, p),
-	}
-	c.Settings = settings
+	c := &command{}
 
 	cmd := &cobra.Command{
 		Use:     use,
@@ -106,96 +70,31 @@ func newCmd(settings *environment.Settings, p common.FactoryProvider) *cobra.Com
 		Long:    longDesc,
 		Example: examples,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
-			return c.validate()
+			return c.Validate()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return c.run()
 		},
 	}
-
-	c.Settings = settings
-	cmd.SetOutput(c.Settings.Streams.Out)
-	cmd.SilenceUsage = true
-
-	cmd.Flags().StringVar(&c.criteriaStr, criteriaFlag, "", criteriaUsage)
-	cmd.Flags().StringVar(&c.mspID, mspIDFlag, "", mspIDUsage)
-	cmd.Flags().StringVar(&c.peerID, peerIDFlag, "", peerIDUsage)
-	cmd.Flags().StringVar(&c.appName, appNameFlag, "", appNameUsage)
-	cmd.Flags().StringVar(&c.appVersion, appVerFlag, "", appVerUsage)
-	cmd.Flags().StringVar(&c.componentName, componentNameFlag, "", componentNameUsage)
-	cmd.Flags().StringVar(&c.componentVersion, componentVerFlag, "", componentVerUsage)
-
+	c.CriteriaBaseCommand = common.NewCriteriaBaseCommand(settings, p, cmd)
 	return cmd
 }
 
 // command implements the query command
 type command struct {
-	*common.BaseCommand
-
-	// Flags
-	criteriaStr      string
-	mspID            string
-	peerID           string
-	appName          string
-	appVersion       string
-	componentName    string
-	componentVersion string
-}
-
-func (c *command) validate() error {
-	if c.criteriaStr != "" {
-		if c.mspID != "" || c.peerID != "" || c.appName != "" || c.appVersion != "" || c.componentName != "" || c.componentVersion != "" {
-			return errors.New(errCriteriaMustBeAlone)
-		}
-
-		// Validate the criteria
-		criteria := &common.Criteria{}
-		if err := json.Unmarshal([]byte(c.criteriaStr), criteria); err != nil {
-			return errors.WithMessagef(err, errInvalidCriteria)
-		}
-	} else {
-		if c.mspID == "" {
-			return errors.New(errMspOrCriteriaRequired)
-		}
-	}
-	return nil
+	*common.CriteriaBaseCommand
 }
 
 func (c *command) run() error {
-	var criteriaBytes []byte
-	if c.criteriaStr != "" {
-		criteriaBytes = []byte(c.criteriaStr)
-	} else {
-		criteria := &common.Criteria{
-			MspID:            c.mspID,
-			PeerID:           c.peerID,
-			AppName:          c.appName,
-			AppVersion:       c.appVersion,
-			ComponentName:    c.componentName,
-			ComponentVersion: c.componentVersion,
-		}
-		var err error
-		criteriaBytes, err = json.Marshal(criteria)
-		if err != nil {
-			return err
-		}
-	}
-
-	req := channel.Request{
-		ChaincodeID: common.ConfigSCC,
-		Fcn:         "get",
-		Args:        [][]byte{criteriaBytes},
-	}
-
-	ch, err := c.Channel()
+	criteriaBytes, err := c.GetCriteriaBytes()
 	if err != nil {
 		return err
 	}
 
-	resp, err := ch.Query(req, channel.WithTargetEndpoints(c.Context().Peers...))
+	config, err := c.GetConfig(criteriaBytes)
 	if err != nil {
 		return err
 	}
 
-	return c.Fprintln(string(resp.Payload))
+	return c.Fprintln(string(config))
 }
