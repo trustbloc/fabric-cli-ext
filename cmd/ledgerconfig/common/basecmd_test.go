@@ -24,7 +24,7 @@ func TestBaseCommand_Channel(t *testing.T) {
 	t.Run("With factory error", func(t *testing.T) {
 		errExpected := errors.New("factory error")
 		p := func(config *environment.Config) (fabric.Factory, error) { return nil, errExpected }
-		c := newMockCmd(t, &mocks.Writer{}, p)
+		c := newMockCmd(t, p)
 		ch, err := c.Channel()
 		require.EqualError(t, err, errExpected.Error())
 		require.Nil(t, ch)
@@ -35,7 +35,7 @@ func TestBaseCommand_Channel(t *testing.T) {
 		factory.ChannelReturns(nil, errExpected)
 
 		p := func(config *environment.Config) (fabric.Factory, error) { return factory, nil }
-		c := newMockCmd(t, &mocks.Writer{}, p)
+		c := newMockCmd(t, p)
 		ch, err := c.Channel()
 		require.EqualError(t, err, errExpected.Error())
 		require.Nil(t, ch)
@@ -45,7 +45,7 @@ func TestBaseCommand_Channel(t *testing.T) {
 		factory.ChannelReturns(&mocks.Channel{}, nil)
 
 		p := func(config *environment.Config) (fabric.Factory, error) { return factory, nil }
-		c := newMockCmd(t, &mocks.Writer{}, p)
+		c := newMockCmd(t, p)
 		ch, err := c.Channel()
 		require.NoError(t, err)
 		require.NotNil(t, ch)
@@ -54,7 +54,7 @@ func TestBaseCommand_Channel(t *testing.T) {
 
 func TestBaseCommand_Context(t *testing.T) {
 	p := func(config *environment.Config) (fabric.Factory, error) { return &mocks.Factory{}, nil }
-	c := newMockCmd(t, &mocks.Writer{}, p)
+	c := newMockCmd(t, p)
 	ctx := c.Context()
 	require.NotNil(t, ctx)
 }
@@ -62,15 +62,60 @@ func TestBaseCommand_Context(t *testing.T) {
 func TestBaseCommand_Fprintln(t *testing.T) {
 	const msg = "written message"
 
-	w := &mocks.Writer{}
 	p := func(config *environment.Config) (fabric.Factory, error) { return &mocks.Factory{}, nil }
-	c := newMockCmd(t, w, p)
-	require.NoError(t, c.Fprintln(msg))
-	require.Equal(t, msg, w.Written())
+
+	t.Run("No error", func(t *testing.T) {
+		w := &mocks.Writer{}
+		c := newMockCmdWithReaderWriter(t, &mocks.Reader{}, w, p)
+		require.NoError(t, c.Fprintln(msg))
+		require.Equal(t, msg, w.Written())
+	})
+
+	t.Run("With error", func(t *testing.T) {
+		errExpected := errors.New("write error")
+		w := &mocks.Writer{Err: errExpected}
+		c := newMockCmdWithReaderWriter(t, &mocks.Reader{}, w, p)
+		require.EqualError(t, c.Fprintln(msg), errExpected.Error())
+	})
 }
 
-func newMockCmd(t *testing.T, out io.Writer, p FactoryProvider) *BaseCommand {
+func TestBaseCommand_FprintlnOrPanic(t *testing.T) {
+	const msg = "written message"
+
+	p := func(config *environment.Config) (fabric.Factory, error) { return &mocks.Factory{}, nil }
+
+	t.Run("No panic", func(t *testing.T) {
+		w := &mocks.Writer{}
+		c := newMockCmdWithReaderWriter(t, &mocks.Reader{}, w, p)
+		require.NotPanics(t, func() {
+			c.FprintlnOrPanic(msg)
+		})
+		require.Equal(t, msg, w.Written())
+	})
+
+	t.Run("With panic", func(t *testing.T) {
+		errExpected := errors.New("write error")
+		w := &mocks.Writer{Err: errExpected}
+		c := newMockCmdWithReaderWriter(t, &mocks.Reader{}, w, p)
+		require.PanicsWithValue(t, errExpected.Error(), func() {
+			c.FprintlnOrPanic(msg)
+		})
+	})
+}
+
+func TestBaseCommand_Prompt(t *testing.T) {
+	p := func(config *environment.Config) (fabric.Factory, error) { return &mocks.Factory{}, nil }
+	c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, &mocks.Writer{}, p)
+	require.Equal(t, "Y", c.Prompt())
+}
+
+func newMockCmd(t *testing.T, p FactoryProvider) *BaseCommand {
+	return newMockCmdWithReaderWriter(t, &mocks.Reader{}, &mocks.Writer{}, p)
+}
+
+func newMockCmdWithReaderWriter(t *testing.T, in io.Reader, out io.Writer, p FactoryProvider) *BaseCommand {
 	settings := environment.NewDefaultSettings()
+	settings.Streams.In = in
 	settings.Streams.Out = out
 
 	settings.Config.CurrentContext = "testctx"

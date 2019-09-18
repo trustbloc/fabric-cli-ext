@@ -1,0 +1,71 @@
+{
+  "MspID": "Org1MSP",
+  "Peers": [
+    {
+      "PeerID": "peer0.org1.com",
+      "Apps": [
+        {
+          "AppName": "app1",
+          "Version": "1",
+          "Format": "YAML",
+          "Config": "file://./org1-peer0-app1.yaml"
+        },
+        {
+          "AppName": "app2",
+          "Version": "1",
+          "Format": "JSON",
+          "Config": "file://./org1-peer0-app2.json"
+        }
+      ]
+    },
+    {
+      "PeerID": "peer1.org1.com",
+      "Apps": [
+        {
+          "AppName": "app1",
+          "Version": "1",
+          "Format": "YAML",
+          "Config": "file://./org1-peer1-app1.yaml"
+        },
+        {
+          "AppName": "app2",
+          "Version": "1",
+          "Format": "JSON",
+          "Config": "file://./org1-peer1-app2.json"
+        }
+      ]
+    }
+  ],
+  "Apps": [
+    {
+      "AppName": "app3",
+      "Version": "1",
+      "Format": "JSON",
+      "Config": "file://./org1-app3.json"
+    },
+    {
+      "AppName": "app4",
+      "Version": "1",
+      "Components": [
+        {
+          "Name": "comp1",
+          "Version": "v1",
+          "Format": "YAML",
+          "Config": "file://./org1-app4-comp1.yaml"
+        },
+        {
+          "Name": "comp2",
+          "Version": "v1",
+          "Format": "YAML",
+          "Config": "file://./org1-app4-comp2.yaml"
+        }
+      ]
+    },
+    {
+      "AppName": "app5",
+      "Version": "1",
+      "Format": "Other",
+      "Config": "embedded config"
+    }
+  ]
+}
