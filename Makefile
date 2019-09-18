@@ -8,6 +8,7 @@
 # Supported Targets:
 #
 # all:                        runs checks, unit tests, and builds the plugins
+# plugins:                    builds fabric-cli and plugins
 # unit-test:                  runs unit tests
 # lint:                       runs linters
 # checks:                     runs code checks
@@ -17,6 +18,7 @@
 # Local variables used by makefile
 PROJECT_NAME            = fabric-cli-ext
 export GO111MODULE      = on
+export FABRIC_CLI_VERSION ?= f6d60d55e800403c587b564c1ca383b2cb496bed
 
 checks: version license lint
 
@@ -26,7 +28,7 @@ lint:
 license: version
 	@scripts/check_license.sh
 
-all: clean checks plugins unit-test
+all: clean checks unit-test plugins
 
 unit-test:
 	@scripts/unit.sh
