@@ -20,6 +20,22 @@ import (
 	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/mocks"
 )
 
+const (
+	payload = `[{"MspID":"msp1","PeerID":"","AppName":"app3","AppVersion":"1","TxID":"tx1","Format":"Other","Config":"config"}]`
+
+	formattedPayload = `[
+  {
+    "MspID": "msp1",
+    "PeerID": "",
+    "AppName": "app3",
+    "AppVersion": "1",
+    "TxID": "tx1",
+    "Format": "Other",
+    "Config": "config"
+  }
+]`
+)
+
 func TestQueryCmd_InitializeError(t *testing.T) {
 	t.Run("With channel error", func(t *testing.T) {
 		errExpected := errors.New("channel error")
@@ -60,25 +76,23 @@ func TestDeleteCmd(t *testing.T) {
 		require.NotContains(t, w.Written(), msgContinueOrAbort) // Confirmation prompt should not be displayed
 	})
 	t.Run("With prompt - Y", func(t *testing.T) {
-		const payload = `[{"MspID":"msp1","PeerID":"","AppName":"app3","AppVersion":"1","TxID":"tx1","Format":"Other","Config":"config"}]`
 		c.QueryReturns(channel.Response{Payload: []byte(payload)}, nil)
 		w := &mocks.Writer{}
 		c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, p, "--criteria", `{"MspID":"msp1"}`)
 		require.NoError(t, c.Execute())
-		require.Contains(t, w.Written(), payload)            // The configuration to be deleted should be displayed
-		require.Contains(t, w.Written(), msgContinueOrAbort) // The Y|N prompt should be displayed
-		require.Contains(t, w.Written(), msgConfigDeleted)   // The message saying that the delete was successful should be displayed
+		require.Contains(t, string(w.Bytes), formattedPayload) // The configuration to be deleted should be displayed
+		require.Contains(t, w.Written(), msgContinueOrAbort)   // The Y|N prompt should be displayed
+		require.Contains(t, w.Written(), msgConfigDeleted)     // The message saying that the delete was successful should be displayed
 	})
 	t.Run("With prompt - N", func(t *testing.T) {
-		const payload = `[{"MspID":"msp1","PeerID":"","AppName":"app3","AppVersion":"1","TxID":"tx1","Format":"Other","Config":"config"}]`
 		c.QueryReturns(channel.Response{Payload: []byte(payload)}, nil)
 		w := &mocks.Writer{}
 		c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("N\n")}, w, p, "--criteria", `{"MspID":"msp1"}`)
 		require.NoError(t, c.Execute())
-		require.Contains(t, w.Written(), payload)             // The configuration to be deleted should be displayed
-		require.Contains(t, w.Written(), msgContinueOrAbort)  // The Y|N prompt should be displayed
-		require.Contains(t, w.Written(), msgAborted)          // The message saying that the delete was aborted should be displayed
-		require.NotContains(t, w.Written(), msgConfigDeleted) // The message saying that the delete was successful should NOT be displayed
+		require.Contains(t, string(w.Bytes), formattedPayload) // The configuration to be deleted should be displayed
+		require.Contains(t, w.Written(), msgContinueOrAbort)   // The Y|N prompt should be displayed
+		require.Contains(t, w.Written(), msgAborted)           // The message saying that the delete was aborted should be displayed
+		require.NotContains(t, w.Written(), msgConfigDeleted)  // The message saying that the delete was successful should NOT be displayed
 	})
 	t.Run("With prompt - No config for criteria", func(t *testing.T) {
 		c.QueryReturns(channel.Response{Payload: []byte("null")}, nil)
@@ -93,6 +107,18 @@ func TestDeleteCmd(t *testing.T) {
 		w := &mocks.Writer{}
 		c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, p, "--criteria", `{"MspID":"msp1"}`)
 		require.EqualError(t, c.Execute(), errExpected.Error())
+	})
+	t.Run("With prompt - output stream error", func(t *testing.T) {
+		c.QueryReturns(channel.Response{Payload: []byte(payload)}, nil)
+		errExpected := errors.New("output stream error")
+		w := &mocks.Writer{Err: errExpected}
+		c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, p, "--criteria", `{"MspID":"msp1"}`)
+		require.EqualError(t, c.Execute(), errExpected.Error())
+	})
+	t.Run("With prompt - format error", func(t *testing.T) {
+		c.QueryReturns(channel.Response{Payload: []byte("invalid JSON")}, nil)
+		c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, &mocks.Writer{}, p, "--criteria", `{"MspID":"msp1"}`)
+		require.Error(t, c.Execute())
 	})
 }
 

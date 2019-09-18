@@ -113,12 +113,11 @@ func (c *command) run() error {
 		if string(config) == "null" {
 			return c.Fprintln(msgNoConfig)
 		}
-		prompt := fmt.Sprintf("The following configuration will be deleted:\n\n%s\n\n%s", config, msgContinueOrAbort)
-		e = c.Fprintln(prompt)
+		confirmed, e := c.confirmDelete(config)
 		if e != nil {
 			return e
 		}
-		if strings.ToLower(c.Prompt()) != "y" {
+		if !confirmed {
 			return c.Fprintln(msgAborted)
 		}
 	}
@@ -134,4 +133,18 @@ func (c *command) run() error {
 	}
 
 	return c.Fprintln(msgConfigDeleted)
+}
+
+// confirmDelete prompts the user for confirmation of the delete
+func (c *command) confirmDelete(config []byte) (bool, error) {
+	displayedJSON, err := common.FormatJSON(config)
+	if err != nil {
+		return false, err
+	}
+	prompt := fmt.Sprintf("The following configuration will be deleted:\n\n%s\n\n%s", displayedJSON, msgContinueOrAbort)
+	err = c.Fprintln(prompt)
+	if err != nil {
+		return false, err
+	}
+	return strings.ToLower(c.Prompt()) == "y", nil
 }

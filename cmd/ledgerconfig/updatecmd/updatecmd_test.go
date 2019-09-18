@@ -115,6 +115,13 @@ func TestUpdateCmd(t *testing.T) {
 		require.Contains(t, w.Written(), msgAborted)
 		require.NotContains(t, w.Written(), msgConfigUpdated)
 	})
+
+	t.Run("With prompt - output stream error", func(t *testing.T) {
+		errExpected := errors.New("output stream error")
+		w := &mocks.Writer{Err: errExpected}
+		c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("N\n")}, w, p, "--config", `{"MspID":"msp1"}`)
+		require.EqualError(t, c.Execute(), errExpected.Error())
+	})
 }
 
 func newMockCmd(t *testing.T, p common.FactoryProvider, args ...string) *cobra.Command {
