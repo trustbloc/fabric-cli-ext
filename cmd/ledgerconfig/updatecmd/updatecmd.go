@@ -124,11 +124,9 @@ const (
 	configFileFlag  = "configfile"
 	configFileUsage = `The path to the config file. Example: --configfile "./configs/msp1_config.json"`
 
-	noPromptFlag        = "noprompt"
-	noPromptDescription = "If specified then update operation will not prompt for confirmation. Example: --noprompt"
-)
+	noPromptFlag  = "noprompt"
+	noPromptUsage = "If specified then update operation will not prompt for confirmation. Example: --noprompt"
 
-var (
 	errConfigOrConfigFileRequired = "one of --config or --configfile must be specified"
 	errInvalidJSONConfig          = "invalid JSON config"
 	errFileNotFound               = "file not found"
@@ -169,7 +167,7 @@ func newCmd(settings *environment.Settings, p common.FactoryProvider) *cobra.Com
 
 	cmd.Flags().StringVar(&c.config, configFlag, "", configUsage)
 	cmd.Flags().StringVar(&c.configFile, configFileFlag, "", configFileUsage)
-	cmd.Flags().BoolVar(&c.noPrompt, noPromptFlag, false, noPromptDescription)
+	cmd.Flags().BoolVar(&c.noPrompt, noPromptFlag, false, noPromptUsage)
 
 	return cmd
 }
@@ -219,11 +217,11 @@ func (c *command) run() error {
 
 	// Get confirmation from the user
 	if !c.noPrompt {
-		prompt := fmt.Sprintf("Updating the configuration with:\n\n%s\n\n%s", configBytes, msgContinueOrAbort)
-		if e := c.Fprintln(prompt); e != nil {
+		confirmed, e := c.confirmUpdate(configBytes)
+		if e != nil {
 			return e
 		}
-		if strings.ToLower(c.Prompt()) != "y" {
+		if !confirmed {
 			return c.Fprintln(msgAborted)
 		}
 	}
@@ -252,6 +250,20 @@ func (c *command) getConfigBytes() ([]byte, error) {
 		return []byte(c.config), nil
 	}
 	return readFile(c.configFile)
+}
+
+// confirmUpdate prompts the user for confirmation of the update
+func (c *command) confirmUpdate(config []byte) (bool, error) {
+	displayedJSON, err := common.FormatJSON(config)
+	if err != nil {
+		return false, err
+	}
+	prompt := fmt.Sprintf("Updating the configuration with:\n\n%s\n\n%s", displayedJSON, msgContinueOrAbort)
+	err = c.Fprintln(prompt)
+	if err != nil {
+		return false, err
+	}
+	return strings.ToLower(c.Prompt()) == "y", nil
 }
 
 func validateConfig(cfg string) error {

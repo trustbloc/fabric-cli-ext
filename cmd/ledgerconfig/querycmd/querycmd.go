@@ -56,6 +56,13 @@ If PeerID and AppName are not specified then all of the MSP's configuration is r
 `
 )
 
+const (
+	formatFlag  = "format"
+	formatUsage = "If specified then displayed JSON will be formatted. Example: --format"
+
+	msgNoConfig = "No configuration matches the given criteria"
+)
+
 // New returns the ledger config query command
 func New(settings *environment.Settings) *cobra.Command {
 	return newCmd(settings, nil)
@@ -76,6 +83,7 @@ func newCmd(settings *environment.Settings, p common.FactoryProvider) *cobra.Com
 			return c.run()
 		},
 	}
+	cmd.Flags().BoolVar(&c.formatJSON, formatFlag, false, formatUsage)
 	c.CriteriaBaseCommand = common.NewCriteriaBaseCommand(settings, p, cmd)
 	return cmd
 }
@@ -83,6 +91,9 @@ func newCmd(settings *environment.Settings, p common.FactoryProvider) *cobra.Com
 // command implements the query command
 type command struct {
 	*common.CriteriaBaseCommand
+
+	// Flags
+	formatJSON bool
 }
 
 func (c *command) run() error {
@@ -96,5 +107,19 @@ func (c *command) run() error {
 		return err
 	}
 
-	return c.Fprintln(string(config))
+	if string(config) == "null" {
+		return c.Fprintln(msgNoConfig)
+	}
+
+	var displayedJSON []byte
+	if c.formatJSON {
+		displayedJSON, err = common.FormatJSON(config)
+		if err != nil {
+			return err
+		}
+	} else {
+		displayedJSON = config
+	}
+
+	return c.Fprintln(string(displayedJSON))
 }

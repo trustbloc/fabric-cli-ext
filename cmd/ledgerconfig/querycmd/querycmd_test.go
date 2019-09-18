@@ -20,6 +20,17 @@ import (
 	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/mocks"
 )
 
+const (
+	payload = `[{"MspID":"msp1"}]`
+
+	formattedPayload = `[
+  {
+    "MspID": "msp1"
+  }
+]
+`
+)
+
 func TestQueryCmd_InitializeError(t *testing.T) {
 	t.Run("With channel error", func(t *testing.T) {
 		errExpected := errors.New("channel error")
@@ -45,7 +56,6 @@ func TestQueryCmd(t *testing.T) {
 	factory := &mocks.Factory{}
 	c := &mocks.Channel{}
 
-	const payload = `[{"MspID":"msp1"}]`
 	resp := channel.Response{
 		Payload: []byte(payload),
 	}
@@ -65,6 +75,25 @@ func TestQueryCmd(t *testing.T) {
 		c := newMockCmd(t, w, p, "--mspid", "msp1")
 		require.NoError(t, c.Execute())
 		require.Equal(t, payload, w.Written())
+	})
+	t.Run("No config for criteria", func(t *testing.T) {
+		c.QueryReturns(channel.Response{Payload: []byte("null")}, nil)
+		w := &mocks.Writer{}
+		c := newMockCmd(t, w, p, "--mspid", "msp1")
+		require.NoError(t, c.Execute())
+		require.Equal(t, msgNoConfig, w.Written())
+	})
+	t.Run("With --format", func(t *testing.T) {
+		c.QueryReturns(resp, nil)
+		w := &mocks.Writer{}
+		c := newMockCmd(t, w, p, "--mspid", "msp1", "--format")
+		require.NoError(t, c.Execute())
+		require.Equal(t, formattedPayload, string(w.Bytes))
+	})
+	t.Run("With format error", func(t *testing.T) {
+		c.QueryReturns(channel.Response{Payload: []byte("invalid JSON")}, nil)
+		c := newMockCmd(t, &mocks.Writer{}, p, "--mspid", "msp1", "--format")
+		require.Error(t, c.Execute())
 	})
 }
 
