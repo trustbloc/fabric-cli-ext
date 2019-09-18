@@ -18,6 +18,14 @@ make checks
 
 # run unit-test
 make unit-test
+
+# build fabric-cli and plugins
+make plugins
+
+# install and run ledgerconfig plugin
+cd .build/
+bin/fabric plugin install ./ledgerconfig
+bin/fabric ledgerconfig
 ```
 
 ## Build dependencies
