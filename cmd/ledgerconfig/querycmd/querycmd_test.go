@@ -81,6 +81,13 @@ func TestQueryCmd(t *testing.T) {
 		w := &mocks.Writer{}
 		c := newMockCmd(t, w, p, "--mspid", "msp1")
 		require.NoError(t, c.Execute())
+		require.Equal(t, "null", w.Written())
+	})
+	t.Run("No config for criteria with --format", func(t *testing.T) {
+		c.QueryReturns(channel.Response{Payload: []byte("null")}, nil)
+		w := &mocks.Writer{}
+		c := newMockCmd(t, w, p, "--mspid", "msp1", "--format")
+		require.NoError(t, c.Execute())
 		require.Equal(t, msgNoConfig, w.Written())
 	})
 	t.Run("With --format", func(t *testing.T) {

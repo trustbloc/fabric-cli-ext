@@ -23,6 +23,7 @@
 
 test/bddtests/fixtures/fabric/crypto-config/
 test/bddtests/fixtures/fabric/channel/
+test/bddtests/.fabriccli
 docker-compose.log
 
 docs/build

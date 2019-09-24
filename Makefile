@@ -28,7 +28,7 @@ DEV_IMAGES              = $(shell docker images dev-* -q)
 ARCH                    = $(shell go env GOARCH)
 GO_VER                  = $(shell grep "GO_VER" .ci-properties |cut -d'=' -f2-)
 export GO111MODULE      = on
-export FABRIC_CLI_VERSION ?= f6d60d55e800403c587b564c1ca383b2cb496bed
+export FABRIC_CLI_VERSION ?= 94768c835ab24c66f01d18fb669ab416b98d95e0
 
 # Fabric tools docker image (overridable)
 FABRIC_TOOLS_IMAGE   ?= hyperledger/fabric-tools
@@ -63,6 +63,7 @@ clean: clean-images
 	rm -rf ./.build
 	rm -rf ./test/bddtests/fixtures/fabric/channel
 	rm -rf ./test/bddtests/fixtures/fabric/crypto-config
+	rm -rf ./test/bddtests/.fabriccli
 
 generate:
 	go generate ./...
@@ -84,8 +85,7 @@ channel-config-gen:
 populate-fixtures:
 	@scripts/populate-fixtures.sh -f
 
-# bddtests: clean checks populate-fixtures docker-thirdparty bddtests-fabric-peer-docker
-bddtests: clean populate-fixtures docker-thirdparty bddtests-fabric-peer-docker
+bddtests: populate-fixtures docker-thirdparty bddtests-fabric-peer-docker
 	@scripts/integration.sh
 
 bddtests-fabric-peer-cli:
@@ -94,7 +94,7 @@ bddtests-fabric-peer-cli:
 	@cd test/bddtests/fixtures/fabric/peer/cmd && go build -o ../../../../../../.build/bin/fabric-peer github.com/trustbloc/fabric-cli-ext/test/bddtests/fixtures/fabric/peer/cmd
 
 bddtests-fabric-peer-docker:
-	@docker build -f ./test/bddtests/fixtures/images/fabric-peer/Dockerfile --no-cache -t fabric-peer:latest \
+	@docker build -f ./test/bddtests/fixtures/images/fabric-peer/Dockerfile --no-cache -t trustbloc/fabric-peer-cli-test:latest \
 	--build-arg FABRIC_PEER_EXT_IMAGE=$(FABRIC_PEER_EXT_IMAGE) \
 	--build-arg FABRIC_PEER_EXT_TAG=$(FABRIC_PEER_EXT_TAG) \
 	--build-arg GO_VER=$(GO_VER) \

@@ -107,12 +107,11 @@ func (c *command) run() error {
 		return err
 	}
 
-	if string(config) == "null" {
-		return c.Fprintln(msgNoConfig)
-	}
-
 	var displayedJSON []byte
 	if c.formatJSON {
+		if string(config) == "null" {
+			return c.Fprintln(msgNoConfig)
+		}
 		displayedJSON, err = common.FormatJSON(config)
 		if err != nil {
 			return err
