@@ -10,7 +10,7 @@ go:
   - 1.12.5
 
 script:
-  - make unit-test
+  - make all
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

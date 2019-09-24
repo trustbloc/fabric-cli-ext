@@ -32,7 +32,7 @@ services:
       - ./fabric/crypto-config/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls/ca.crt:/etc/hyperledger/mutual_tls/orderer/ca.crt
   peer0.org1.example.com:
     container_name: peer0.org1.example.com
-    image: ${FABRIC_PEER_FIXTURE_IMAGE}:latest
+    image: ${TRUSTBLOCK_NS}/${FABRIC_PEER_FIXTURE_IMAGE}:latest
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer0.org1.example.com
@@ -78,12 +78,13 @@ services:
       # Give Snap the orderer CA
       - ./fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt:/etc/hyperledger/fabric/tls/orderer-ca-cert.pem
       - ./fabric/crypto-config/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls:/etc/hyperledger/mutual_tls/peer
+      - ${COMPOSE_DIR}/config/fabric/core.yaml:/etc/hyperledger/fabric/core.yaml
     depends_on:
       - builder
       - orderer.example.com
   peer1.org1.example.com:
     container_name: peer1.org1.example.com
-    image: ${FABRIC_PEER_FIXTURE_IMAGE}:latest
+    image: ${TRUSTBLOCK_NS}/${FABRIC_PEER_FIXTURE_IMAGE}:latest
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer1.org1.example.com
@@ -129,13 +130,14 @@ services:
       # Give Snap the orderer CA
       - ./fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt:/etc/hyperledger/fabric/tls/orderer-ca-cert.pem
       - ./fabric/crypto-config/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls:/etc/hyperledger/mutual_tls/peer
+      - ${COMPOSE_DIR}/config/fabric/core.yaml:/etc/hyperledger/fabric/core.yaml
     depends_on:
       - builder
       - orderer.example.com
 
   peer0.org2.example.com:
     container_name: peer0.org2.example.com
-    image: ${FABRIC_PEER_FIXTURE_IMAGE}:latest
+    image: ${TRUSTBLOCK_NS}/${FABRIC_PEER_FIXTURE_IMAGE}:latest
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer0.org2.example.com
@@ -179,12 +181,13 @@ services:
       - ./fabric/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls:/etc/hyperledger/fabric/tls
       - ./fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt:/etc/hyperledger/fabric/tls/orderer-ca-cert.pem
       - ./fabric/crypto-config/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls:/etc/hyperledger/mutual_tls/peer
+      - ${COMPOSE_DIR}/config/fabric/core.yaml:/etc/hyperledger/fabric/core.yaml
     depends_on:
       - builder
       - orderer.example.com
   peer1.org2.example.com:
     container_name: peer1.org2.example.com
-    image: ${FABRIC_PEER_FIXTURE_IMAGE}:latest
+    image: ${TRUSTBLOCK_NS}/${FABRIC_PEER_FIXTURE_IMAGE}:latest
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer1.org2.example.com
@@ -229,6 +232,7 @@ services:
       - ./fabric/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls:/etc/hyperledger/fabric/tls
       - ./fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt:/etc/hyperledger/fabric/tls/orderer-ca-cert.pem
       - ./fabric/crypto-config/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls:/etc/hyperledger/mutual_tls/peer
+      - ${COMPOSE_DIR}/config/fabric/core.yaml:/etc/hyperledger/fabric/core.yaml
     depends_on:
       - builder
       - orderer.example.com
