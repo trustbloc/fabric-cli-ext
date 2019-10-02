@@ -71,10 +71,10 @@ github.com/hyperledger/fabric-cli v0.0.0-20190920195049-94768c835ab2 h1:6+ODMlWE
 github.com/hyperledger/fabric-cli v0.0.0-20190920195049-94768c835ab2/go.mod h1:n4ZmIMZzFB5LK/3ABDiesDgicOnz4hYTGb+AfscxG84=
 github.com/hyperledger/fabric-lib-go v1.0.0 h1:UL1w7c9LvHZUSkIvHTDGklxFv2kTeva1QI2emOVc324=
 github.com/hyperledger/fabric-lib-go v1.0.0/go.mod h1:H362nMlunurmHwkYqR5uHL2UDWbQdbfz74n8kbCFsqc=
-github.com/hyperledger/fabric-protos-go v0.0.0-20190821180310-6b6ac9042dfd h1:z0IbaMd4Ry2Cmmxujzy4UDgCUsT/0dOqqoGtOcvDw9Q=
-github.com/hyperledger/fabric-protos-go v0.0.0-20190821180310-6b6ac9042dfd/go.mod h1:xVYTjK4DtZRBxZ2D9aE4y6AbLaPwue2o/criQyQbVD0=
 github.com/hyperledger/fabric-sdk-go v1.0.0-alpha5.0.20190910134818-7c5b61c3218f h1:3aDdoY/JeY76rEFxqt44R00cD88myu6uZdVMkCos1cs=
 github.com/hyperledger/fabric-sdk-go v1.0.0-alpha5.0.20190910134818-7c5b61c3218f/go.mod h1:H5Atl/PpXhEKYYShSLFElohDoB11o4/R0OwBxOs7hcM=
+github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20190930220855-cea2ffaf627c h1:XxVNT73QNRtWwspRrviiBc9OIxL/+zbY5SHtpTxXfMk=
+github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20190930220855-cea2ffaf627c/go.mod h1:i8yJ9t8i1fGe7opUcq6uESxhruMJNXlc+Rx9ooBZsYg=
 github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/joefitzgerald/rainbow-reporter v0.1.0/go.mod h1:481CNgqmVHQZzdIbN52CupLJyoVwB10FQ/IQlF1pdL8=
@@ -173,6 +173,8 @@ github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXf
 github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0Q=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
+github.com/trustbloc/fabric-protos-go-ext v0.0.0-20191001172134-1815f5c382ff h1:HbMmZGdcCRbgwqyF40zeSe+hxzGX8en2cS03Cd7v1mQ=
+github.com/trustbloc/fabric-protos-go-ext v0.0.0-20191001172134-1815f5c382ff/go.mod h1:xVYTjK4DtZRBxZ2D9aE4y6AbLaPwue2o/criQyQbVD0=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
 github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljTbGfSG7qAOspJ7OScBnGdDN/yBr0sguwnwf0=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
