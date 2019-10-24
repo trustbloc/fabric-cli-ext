@@ -1,6 +1,6 @@
 [![Release](https://img.shields.io/github/release/trustbloc/fabric-peer-ext.svg?style=flat-square)](https://github.com/trustbloc/fabric-cli-ext/releases/latest)
 
-[![Build Status](https://dev.azure.com/trustbloc/fabric-cli-ext/_apis/build/status/trustbloc.fabric-cli-ext?branchName=master)](https://dev.azure.com/trustbloc/fabric-cli-ext/_build/latest?definitionId=9&branchName=master)
+[![Build Status](https://dev.azure.com/trustbloc/fabric/_apis/build/status/trustbloc.fabric-cli-ext?branchName=master)](https://dev.azure.com/trustbloc/fabric/_build/latest?definitionId=18&branchName=master)
 [![codecov](https://codecov.io/gh/trustbloc/fabric-cli-ext/branch/master/graph/badge.svg)](https://codecov.io/gh/trustbloc/fabric-cli-ext)
 [![Go Report Card](https://goreportcard.com/badge/github.com/trustbloc/fabric-cli-ext?style=flat-square)](https://goreportcard.com/report/github.com/trustbloc/fabric-cli-ext)
 

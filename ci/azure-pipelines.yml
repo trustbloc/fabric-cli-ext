@@ -8,19 +8,35 @@ variables:
   GOPATH: $(Agent.BuildDirectory)/go
 
 jobs:
-  - job: UnitTest
+  - job: Checks
     pool:
-      vmImage: ubuntu-16.04
+      vmImage: ubuntu-18.04
     timeoutInMinutes: 30
     steps:
     - template: azp-dependencies.yml
     - checkout: self
-    - script: make checks && make unit-test
-      displayName: Run checks and unit test
+    - script: make checks
+      displayName: Run checks
+
+  - job: UnitTest
+    strategy:
+      matrix:
+        Ubuntu:
+          VM_IMAGE: 'ubuntu-18.04'
+        MacOS:
+          VM_IMAGE: 'macOS-10.14'
+    pool:
+      vmImage: $(VM_IMAGE)
+    timeoutInMinutes: 30
+    steps:
+    - template: azp-dependencies.yml
+    - checkout: self
+    - script: make unit-test
+      displayName: Run unit test
 
   - job: BDDTest
     pool:
-      vmImage: ubuntu-16.04
+      vmImage: ubuntu-18.04
     timeoutInMinutes: 30
     steps:
     - template: azp-dependencies.yml
