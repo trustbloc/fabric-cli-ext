@@ -23,8 +23,6 @@ GO_TAGS    ?=
 
 # Local variables used by makefile
 PROJECT_NAME            = fabric-cli-ext
-CONTAINER_IDS           = $(shell docker ps -a -q)
-DEV_IMAGES              = $(shell docker images dev-* -q)
 ARCH                    = $(shell go env GOARCH)
 GO_VER                  = $(shell grep "GO_VER" .ci-properties |cut -d'=' -f2-)
 export GO111MODULE      = on
@@ -106,6 +104,8 @@ docker-thirdparty:
 	docker pull couchdb:2.2.0
 	docker pull hyperledger/fabric-orderer:$(ARCH)-2.0.0-alpha
 
+clean-images: CONTAINER_IDS = $(shell docker ps -a -q)
+clean-images: DEV_IMAGES    = $(shell docker images dev-* -q)
 clean-images:
 	@echo "Stopping all containers, pruning containers and images, deleting dev images"
 ifneq ($(strip $(CONTAINER_IDS)),)
