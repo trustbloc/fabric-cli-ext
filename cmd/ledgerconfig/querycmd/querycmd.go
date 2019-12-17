@@ -31,7 +31,7 @@ Criteria may be specified as a JSON string (using the --criteria option) or it m
 If PeerID and AppName are not specified then all of the MSP's configuration is returned.
 `
 	examples = `
-- Query configuration of a particular application on in a specified peer:
+- Query configuration of a particular application on a specified peer:
 
     $ ./fabric ledgerconfig query --mspid Org1MSP --peerid peer0.org1.com --appname app1 --appver v1
 

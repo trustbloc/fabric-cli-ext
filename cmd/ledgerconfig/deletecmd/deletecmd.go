@@ -127,7 +127,7 @@ func (c *command) run() error {
 		return err
 	}
 
-	_, err = ch.Execute(req, channel.WithTargetEndpoints(c.Context().Peers...))
+	_, err = ch.Execute(req)
 	if err != nil {
 		return err
 	}

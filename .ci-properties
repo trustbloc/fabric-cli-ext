@@ -4,6 +4,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-GO_VER=1.12.5
+GO_VER=1.13.4
 GO_MIN_VER=1.12
-GO_MAX_VER=1.12.9
+GO_MAX_VER=1.13.4
