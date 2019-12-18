@@ -129,7 +129,7 @@ func (c *CriteriaBaseCommand) GetConfig(criteria []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	resp, err := ch.Query(req, channel.WithTargetEndpoints(c.Context().Peers...))
+	resp, err := ch.Query(req)
 	if err != nil {
 		return nil, err
 	}

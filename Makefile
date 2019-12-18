@@ -18,7 +18,7 @@
 # Tool commands (overridable)
 DOCKER_CMD ?= docker
 GO_CMD     ?= go
-ALPINE_VER ?= 3.9
+ALPINE_VER ?= 3.10
 GO_TAGS    ?=
 
 # Local variables used by makefile
@@ -26,7 +26,7 @@ PROJECT_NAME            = fabric-cli-ext
 ARCH                    = $(shell go env GOARCH)
 GO_VER                  = $(shell grep "GO_VER" .ci-properties |cut -d'=' -f2-)
 export GO111MODULE      = on
-export FABRIC_CLI_VERSION ?= 94768c835ab24c66f01d18fb669ab416b98d95e0
+export FABRIC_CLI_VERSION ?= 97c0393410833a7ae32f2b4a540186b719642565
 
 # Fabric tools docker image (overridable)
 FABRIC_TOOLS_IMAGE   ?= hyperledger/fabric-tools

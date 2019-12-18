@@ -10,6 +10,7 @@ Feature: ledger-config
 
   Background: Setup
     Given the channel "mychannel" is created and all peers have joined
+    And "test" chaincode "configscc" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "AND('Org1MSP.member','Org2MSP.member')" with collection policy ""
     And fabric-cli network is initialized
     And fabric-cli plugin "../../.build/ledgerconfig" is installed
     And fabric-cli context "org1-context" is defined on channel "mychannel" with org "peerorg1", peers "peer0.org1.example.com,peer1.org1.example.com" and user "User1"

@@ -43,7 +43,10 @@ func (d *FabricCLISteps) initNetwork() error {
 	if err != nil {
 		return err
 	}
-	_, err = NewFabricCLI().Exec("network", "set", networkName, "--path", sdkConfigPath)
+	out, err := NewFabricCLI().Exec("network", "set", networkName, sdkConfigPath)
+	if err != nil {
+		logger.Errorf("Error: %s:%s", err, out)
+	}
 	return err
 }
 
