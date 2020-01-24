@@ -11,7 +11,7 @@ import (
 
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/peer/node"
-	"github.com/spf13/viper"
+	viper "github.com/spf13/viper2015"
 	extpeer "github.com/trustbloc/fabric-peer-ext/pkg/peer"
 )
 

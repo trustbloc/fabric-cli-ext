@@ -23,8 +23,10 @@ Feature: ledger-config
 
     Given variable "org1Config" is assigned the JSON value '{"MspID":"Org1MSP","Apps":[{"AppName":"app1","Version":"v1","Components":[{"Name":"comp1","Version":"v1","Config":"org1-app1-comp1-config","Format":"Other"},{"Name":"comp2","Version":"v1","Config":"org1-app1-comp2-config","Format":"Other"}]}]}'
     Given variable "org2Config" is assigned the JSON value '{"MspID":"Org2MSP","Apps":[{"AppName":"app1","Version":"v1","Components":[{"Name":"comp1","Version":"v1","Config":"org2-app1-comp1-config","Format":"Other"},{"Name":"comp2","Version":"v1","Config":"org2-app1-comp2-config","Format":"Other"}]}]}'
+    Given variable "generalConfig" is assigned the JSON value '{"MspID":"general","Apps":[{"AppName":"app1","Version":"v1","Config":"general-app1-config","Format":"Other","Components":[{"Name":"comp1","Version":"v1","Config":"general-app1-comp1-config","Format":"Other"},{"Name":"comp2","Version":"v1","Config":"general-app1-comp2-config","Format":"Other"}]}]}'
     When fabric-cli is executed with args "ledgerconfig update --config ${org1Config} --noprompt"
     And fabric-cli is executed with args "ledgerconfig update --config ${org2Config} --noprompt"
+    And fabric-cli is executed with args "ledgerconfig update --config ${generalConfig} --noprompt"
     Then we wait 1 seconds
 
     # Use org2 to query the config
@@ -50,6 +52,16 @@ Feature: ledger-config
     When fabric-cli is executed with args "ledgerconfig query --criteria ${org2Comp2Criteria}"
     Then the JSON path "#" of the response has 1 items
     And the JSON path "0.Config" of the response equals "org2-app1-comp2-config"
+
+    Given variable "generalCriteria" is assigned the JSON value '{"MspID":"general","AppName":"app1"}'
+    When fabric-cli is executed with args "ledgerconfig query --criteria ${generalCriteria}"
+    Then the JSON path "#" of the response has 3 items
+    And the JSON path "0.MspID" of the response equals "general"
+    And the JSON path "0.AppName" of the response equals "app1"
+    And the JSON path "1.MspID" of the response equals "general"
+    And the JSON path "1.AppName" of the response equals "app1"
+    And the JSON path "2.MspID" of the response equals "general"
+    And the JSON path "2.AppName" of the response equals "app1"
 
     # Query using flags
     Given variable "noMatchingCriteria" is assigned the JSON value '{"MspID":"OrgXMSP"}'

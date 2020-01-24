@@ -46,6 +46,8 @@
     {
       "AppName": "app4",
       "Version": "1",
+      "Format": "JSON",
+      "Config": "file://./org1-app4.json",
       "Components": [
         {
           "Name": "comp1",
