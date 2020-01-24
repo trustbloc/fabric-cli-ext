@@ -64,12 +64,13 @@ func (cp *configPreProcessor) visitApps(srcApps []*common.App) ([]*common.App, e
 			if err != nil {
 				return nil, err
 			}
-		} else {
-			components, err = cp.visitComponents(a.Components)
-			if err != nil {
-				return nil, err
-			}
 		}
+
+		components, err = cp.visitComponents(a.Components)
+		if err != nil {
+			return nil, err
+		}
+
 		apps[i] = &common.App{
 			AppName:    a.AppName,
 			Version:    a.Version,
