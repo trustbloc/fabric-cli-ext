@@ -15,8 +15,8 @@ rm -rf fabric-cli
 git clone https://github.com/hyperledger/fabric-cli.git
 cd fabric-cli
 git checkout $FABRIC_CLI_VERSION
-sed  -e "\$areplace github.com/hyperledger/fabric-sdk-go => github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191214123208-6f74e787d798" -i go.mod
-sed  -e "\$areplace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.1-0.20191126151100-5a61374c2e1b" -i go.mod
+sed  -e "\$areplace github.com/hyperledger/fabric-sdk-go => github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191219180315-e1055f391525" -i go.mod
+sed  -e "\$areplace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.1" -i go.mod
 make
 cp ./bin/fabric ../bin/fabric
 cd ../

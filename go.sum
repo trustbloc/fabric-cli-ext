@@ -73,6 +73,8 @@ github.com/hyperledger/fabric-lib-go v1.0.0 h1:UL1w7c9LvHZUSkIvHTDGklxFv2kTeva1Q
 github.com/hyperledger/fabric-lib-go v1.0.0/go.mod h1:H362nMlunurmHwkYqR5uHL2UDWbQdbfz74n8kbCFsqc=
 github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191214123208-6f74e787d798 h1:Yy1piY8v7u7rMLWRcPU8bt+Ydtmwboo+o++7EeJ6nUY=
 github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191214123208-6f74e787d798/go.mod h1:5ehPzmNekl6dCIu1aFljDY7ML/dzNZRZE7CCHnmhtp8=
+github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191219180315-e1055f391525 h1:BXeHz/UNEnkH+QmgeShB6DSY8JASRMu5rsYdlfMToBw=
+github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191219180315-e1055f391525/go.mod h1:/s224b8NLvOJOCIqBvWd9O6u7GE33iuIOT6OfcTE1OE=
 github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/joefitzgerald/rainbow-reporter v0.1.0/go.mod h1:481CNgqmVHQZzdIbN52CupLJyoVwB10FQ/IQlF1pdL8=
@@ -168,8 +170,8 @@ github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXf
 github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0Q=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
-github.com/trustbloc/fabric-protos-go-ext v0.1.1-0.20191126151100-5a61374c2e1b h1:tM1brMvZspXKRSOp83gwKQL+5CGobSqHjh8XB1QM3tQ=
-github.com/trustbloc/fabric-protos-go-ext v0.1.1-0.20191126151100-5a61374c2e1b/go.mod h1:xVYTjK4DtZRBxZ2D9aE4y6AbLaPwue2o/criQyQbVD0=
+github.com/trustbloc/fabric-protos-go-ext v0.1.1 h1:SEEL2g9N2yjxEDbzO6fsWjt4kmaj5SvpQFRq/uVMo5w=
+github.com/trustbloc/fabric-protos-go-ext v0.1.1/go.mod h1:xVYTjK4DtZRBxZ2D9aE4y6AbLaPwue2o/criQyQbVD0=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
 github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljTbGfSG7qAOspJ7OScBnGdDN/yBr0sguwnwf0=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
