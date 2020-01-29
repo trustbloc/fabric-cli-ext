@@ -6,7 +6,7 @@ module github.com/trustbloc/fabric-cli-ext
 
 require (
 	github.com/hyperledger/fabric-cli v0.0.0-20191215205855-97c039341083
-	github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191214123208-6f74e787d798
+	github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191219180315-e1055f391525
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v0.0.4
 	github.com/stretchr/testify v1.3.0
@@ -14,4 +14,4 @@ require (
 
 go 1.13
 
-replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.1-0.20191126151100-5a61374c2e1b
+replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.1
