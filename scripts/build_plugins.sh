@@ -9,14 +9,28 @@ set -e
 
 echo "Building fabric-cli..."
 
+declare envOS
+envOS=$(uname -s)
+
 mkdir -p .build/bin
 cd .build
 rm -rf fabric-cli
 git clone https://github.com/hyperledger/fabric-cli.git
 cd fabric-cli
 git checkout $FABRIC_CLI_VERSION
-sed  -e "\$areplace github.com/hyperledger/fabric-sdk-go => github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191219180315-e1055f391525" -i go.mod
+
+if [ ${envOS} = 'Darwin' ]; then
+/usr/bin/sed -i '' '$a\
+replace github.com/hyperledger/fabric-sdk-go => github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20200203184105-5f7f0b025d89
+' go.mod
+/usr/bin/sed -i '' '$a\
+replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.1
+' go.mod
+else
+sed  -e "\$areplace github.com/hyperledger/fabric-sdk-go => github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20200203184105-5f7f0b025d89" -i go.mod
 sed  -e "\$areplace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.1" -i go.mod
+fi
+
 make
 cp ./bin/fabric ../bin/fabric
 cd ../
@@ -30,7 +44,13 @@ mkdir ./fabric-cli-ext
 cp -r ../cmd/ ./fabric-cli-ext/cmd/
 cp ../go.mod ./fabric-cli-ext/
 cd ./fabric-cli-ext
+
+if [ ${envOS} = 'Darwin' ]; then
+/usr/bin/sed -i ''  '$a\
+replace github.com/hyperledger/fabric-cli => ..\/fabric-cli' go.mod
+else
 sed  -e "\$areplace github.com/hyperledger/fabric-cli => ..\/fabric-cli" -i go.mod
+fi
 
 # ledgerconfig
 go build -buildmode=plugin -o ../ledgerconfig/ledgerconfig.so ./cmd/ledgerconfig/ledgerconfig.go

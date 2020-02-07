@@ -73,8 +73,8 @@ github.com/hyperledger/fabric-lib-go v1.0.0 h1:UL1w7c9LvHZUSkIvHTDGklxFv2kTeva1Q
 github.com/hyperledger/fabric-lib-go v1.0.0/go.mod h1:H362nMlunurmHwkYqR5uHL2UDWbQdbfz74n8kbCFsqc=
 github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191214123208-6f74e787d798 h1:Yy1piY8v7u7rMLWRcPU8bt+Ydtmwboo+o++7EeJ6nUY=
 github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191214123208-6f74e787d798/go.mod h1:5ehPzmNekl6dCIu1aFljDY7ML/dzNZRZE7CCHnmhtp8=
-github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191219180315-e1055f391525 h1:BXeHz/UNEnkH+QmgeShB6DSY8JASRMu5rsYdlfMToBw=
-github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191219180315-e1055f391525/go.mod h1:/s224b8NLvOJOCIqBvWd9O6u7GE33iuIOT6OfcTE1OE=
+github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20200203184105-5f7f0b025d89 h1:he+RBhvEc/7Dcaq+Yb+K3hvO7jaq+3KeXrMkWwVgnzs=
+github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20200203184105-5f7f0b025d89/go.mod h1:/s224b8NLvOJOCIqBvWd9O6u7GE33iuIOT6OfcTE1OE=
 github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/joefitzgerald/rainbow-reporter v0.1.0/go.mod h1:481CNgqmVHQZzdIbN52CupLJyoVwB10FQ/IQlF1pdL8=

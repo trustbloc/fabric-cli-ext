@@ -6,7 +6,7 @@ module github.com/trustbloc/fabric-cli-ext/test/bddtests
 
 require (
 	github.com/DATA-DOG/godog v0.7.13
-	github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191219180315-e1055f391525
+	github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20200203184105-5f7f0b025d89
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.3.0 // indirect
 	github.com/spf13/viper v1.4.0
