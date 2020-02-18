@@ -75,6 +75,7 @@ func (cp *configPreProcessor) visitApps(srcApps []*common.App) ([]*common.App, e
 			AppName:    a.AppName,
 			Version:    a.Version,
 			Format:     a.Format,
+			Tags:       a.Tags,
 			Config:     config,
 			Components: components,
 		}
@@ -93,6 +94,7 @@ func (cp *configPreProcessor) visitComponents(srcComponents []*common.Component)
 			Name:    c.Name,
 			Version: c.Version,
 			Format:  c.Format,
+			Tags:    c.Tags,
 			Config:  config,
 		}
 	}
