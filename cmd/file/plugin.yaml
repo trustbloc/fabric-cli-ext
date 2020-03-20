@@ -1,0 +1,8 @@
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: file
+usage: file
+description: Uploads files to DCAS and manages file index documents in Sidetree
+command: ${FABRIC_HOME}/plugins/file/file.so
