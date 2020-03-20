@@ -16,8 +16,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/common"
-	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/mocks"
+	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
+	"github.com/trustbloc/fabric-cli-ext/cmd/mocks"
 )
 
 const (
@@ -104,7 +104,7 @@ func TestQueryCmd(t *testing.T) {
 	})
 }
 
-func newMockCmd(t *testing.T, out io.Writer, p common.FactoryProvider, args ...string) *cobra.Command {
+func newMockCmd(t *testing.T, out io.Writer, p basecmd.FactoryProvider, args ...string) *cobra.Command {
 	settings := environment.NewDefaultSettings()
 	settings.Streams.Out = out
 

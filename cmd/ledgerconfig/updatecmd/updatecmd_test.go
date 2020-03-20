@@ -16,8 +16,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/common"
-	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/mocks"
+	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
+	"github.com/trustbloc/fabric-cli-ext/cmd/mocks"
 )
 
 func TestUpdateCmd_InvalidOptions(t *testing.T) {
@@ -124,11 +124,11 @@ func TestUpdateCmd(t *testing.T) {
 	})
 }
 
-func newMockCmd(t *testing.T, p common.FactoryProvider, args ...string) *cobra.Command {
+func newMockCmd(t *testing.T, p basecmd.FactoryProvider, args ...string) *cobra.Command {
 	return newMockCmdWithReaderWriter(t, &mocks.Reader{}, &mocks.Writer{}, p, args...)
 }
 
-func newMockCmdWithReaderWriter(t *testing.T, in io.Reader, w io.Writer, p common.FactoryProvider, args ...string) *cobra.Command {
+func newMockCmdWithReaderWriter(t *testing.T, in io.Reader, w io.Writer, p basecmd.FactoryProvider, args ...string) *cobra.Command {
 	settings := environment.NewDefaultSettings()
 	settings.Streams.Out = w
 	settings.Streams.In = in

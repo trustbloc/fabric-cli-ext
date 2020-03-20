@@ -4,7 +4,7 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-package common
+package basecmd
 
 import (
 	"io"
@@ -14,7 +14,7 @@ import (
 	"github.com/hyperledger/fabric-cli/pkg/fabric"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/mocks"
+	"github.com/trustbloc/fabric-cli-ext/cmd/mocks"
 )
 
 //go:generate counterfeiter -o ../mocks/channel.gen.go --fake-name Channel github.com/hyperledger/fabric-cli/pkg/fabric.Channel
@@ -103,17 +103,61 @@ func TestBaseCommand_FprintlnOrPanic(t *testing.T) {
 	})
 }
 
+func TestBaseCommand_Fprint(t *testing.T) {
+	const msg = "written message"
+
+	p := func(config *environment.Config) (fabric.Factory, error) { return &mocks.Factory{}, nil }
+
+	t.Run("No error", func(t *testing.T) {
+		w := &mocks.Writer{}
+		c := newMockCmdWithReaderWriter(t, &mocks.Reader{}, w, p)
+		require.NoError(t, c.Fprint(msg))
+		require.Equal(t, msg, w.Written())
+	})
+
+	t.Run("With error", func(t *testing.T) {
+		errExpected := errors.New("write error")
+		w := &mocks.Writer{Err: errExpected}
+		c := newMockCmdWithReaderWriter(t, &mocks.Reader{}, w, p)
+		require.EqualError(t, c.Fprint(msg), errExpected.Error())
+	})
+}
+
+func TestBaseCommand_FprintOrPanic(t *testing.T) {
+	const msg = "written message"
+
+	p := func(config *environment.Config) (fabric.Factory, error) { return &mocks.Factory{}, nil }
+
+	t.Run("No panic", func(t *testing.T) {
+		w := &mocks.Writer{}
+		c := newMockCmdWithReaderWriter(t, &mocks.Reader{}, w, p)
+		require.NotPanics(t, func() {
+			c.FprintOrPanic(msg)
+		})
+		require.Equal(t, msg, w.Written())
+	})
+
+	t.Run("With panic", func(t *testing.T) {
+		errExpected := errors.New("write error")
+		w := &mocks.Writer{Err: errExpected}
+		c := newMockCmdWithReaderWriter(t, &mocks.Reader{}, w, p)
+		require.PanicsWithValue(t, errExpected.Error(), func() {
+			c.FprintOrPanic(msg)
+		})
+	})
+}
+
 func TestBaseCommand_Prompt(t *testing.T) {
 	p := func(config *environment.Config) (fabric.Factory, error) { return &mocks.Factory{}, nil }
 	c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, &mocks.Writer{}, p)
 	require.Equal(t, "Y", c.Prompt())
 }
 
-func newMockCmd(t *testing.T, p FactoryProvider) *BaseCommand {
+func newMockCmd(t *testing.T, p FactoryProvider) *Command {
 	return newMockCmdWithReaderWriter(t, &mocks.Reader{}, &mocks.Writer{}, p)
 }
 
-func newMockCmdWithReaderWriter(t *testing.T, in io.Reader, out io.Writer, p FactoryProvider) *BaseCommand {
+func newMockCmdWithReaderWriter(t *testing.T, in io.Reader, out io.Writer, p FactoryProvider) *Command {
 	settings := environment.NewDefaultSettings()
 	settings.Streams.In = in
 	settings.Streams.Out = out
@@ -121,7 +165,7 @@ func newMockCmdWithReaderWriter(t *testing.T, in io.Reader, out io.Writer, p Fac
 	settings.Config.CurrentContext = "testctx"
 	settings.Config.Contexts[settings.Config.CurrentContext] = &environment.Context{}
 
-	c := NewBaseCmd(settings, p)
+	c := New(settings, p)
 	require.NotNil(t, c)
 
 	return c
