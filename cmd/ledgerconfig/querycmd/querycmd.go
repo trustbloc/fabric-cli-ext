@@ -9,6 +9,7 @@ package querycmd
 import (
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 	"github.com/spf13/cobra"
+	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
 	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/common"
 )
 
@@ -68,7 +69,7 @@ func New(settings *environment.Settings) *cobra.Command {
 	return newCmd(settings, nil)
 }
 
-func newCmd(settings *environment.Settings, p common.FactoryProvider) *cobra.Command {
+func newCmd(settings *environment.Settings, p basecmd.FactoryProvider) *cobra.Command {
 	c := &command{}
 
 	cmd := &cobra.Command{

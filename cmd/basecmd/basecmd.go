@@ -4,7 +4,7 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-package common
+package basecmd
 
 import (
 	"bufio"
@@ -22,16 +22,16 @@ var defaultFactoryProvider = func(config *environment.Config) (fabric.Factory, e
 	return fabric.NewFactory(config)
 }
 
-// BaseCommand is the base for all commands
-type BaseCommand struct {
+// Command is the base for all commands
+type Command struct {
 	common.Command
 
 	FactoryProvider FactoryProvider
 }
 
-// NewBaseCmd returns a BaseCommand
-func NewBaseCmd(settings *environment.Settings, p FactoryProvider) *BaseCommand {
-	c := &BaseCommand{}
+// New returns a Command
+func New(settings *environment.Settings, p FactoryProvider) *Command {
+	c := &Command{}
 	if p == nil {
 		p = defaultFactoryProvider
 	}
@@ -41,7 +41,7 @@ func NewBaseCmd(settings *environment.Settings, p FactoryProvider) *BaseCommand 
 }
 
 // Channel returns a new SDK channel
-func (c *BaseCommand) Channel() (fabric.Channel, error) {
+func (c *Command) Channel() (fabric.Channel, error) {
 	factory, err := c.FactoryProvider(c.Settings.Config)
 	if err != nil {
 		return nil, err
@@ -50,33 +50,47 @@ func (c *BaseCommand) Channel() (fabric.Channel, error) {
 }
 
 // Context returns the current context
-func (c *BaseCommand) Context() *environment.Context {
+func (c *Command) Context() *environment.Context {
 	return c.Settings.Config.Contexts[c.Settings.Config.CurrentContext]
 }
 
 // Fprintln displays the given args to the configured output stream
-func (c *BaseCommand) Fprintln(arg ...interface{}) error {
+func (c *Command) Fprintln(arg ...interface{}) error {
 	_, err := fmt.Fprintln(c.Settings.Streams.Out, arg...)
 	return err
 }
 
 // FprintlnOrPanic displays the given args to the configured output stream.
 // If an error occurs then this function panics.
-func (c *BaseCommand) FprintlnOrPanic(arg ...interface{}) {
+func (c *Command) FprintlnOrPanic(arg ...interface{}) {
 	if _, err := fmt.Fprintln(c.Settings.Streams.Out, arg...); err != nil {
 		panic(err.Error())
 	}
 }
 
+// Fprint displays the given args to the configured output stream
+func (c *Command) Fprint(arg ...interface{}) error {
+	_, err := fmt.Fprint(c.Settings.Streams.Out, arg...)
+	return err
+}
+
+// FprintOrPanic displays the given args to the configured output stream.
+// If an error occurs then this function panics.
+func (c *Command) FprintOrPanic(arg ...interface{}) {
+	if _, err := fmt.Fprint(c.Settings.Streams.Out, arg...); err != nil {
+		panic(err.Error())
+	}
+}
+
 // Prompt waits for the user to enter a string and returns the string
-func (c *BaseCommand) Prompt() string {
+func (c *Command) Prompt() string {
 	ackChan := make(chan string)
 	go c.readFromTerminal(ackChan)
 	ack := <-ackChan
 	return ack
 }
 
-func (c *BaseCommand) readFromTerminal(responsech chan string) {
+func (c *Command) readFromTerminal(responsech chan string) {
 	reader := bufio.NewReader(c.Settings.Streams.In)
 	if response, err := reader.ReadString('\n'); err != nil {
 		c.FprintlnOrPanic(fmt.Sprintf("Error reading from terminal: %s", err))

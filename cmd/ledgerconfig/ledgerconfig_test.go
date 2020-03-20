@@ -11,7 +11,7 @@ import (
 
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 	"github.com/stretchr/testify/require"
-	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/mocks"
+	"github.com/trustbloc/fabric-cli-ext/cmd/mocks"
 )
 
 func TestNew(t *testing.T) {

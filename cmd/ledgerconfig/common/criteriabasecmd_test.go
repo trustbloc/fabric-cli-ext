@@ -16,7 +16,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/mocks"
+	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
+	"github.com/trustbloc/fabric-cli-ext/cmd/mocks"
 )
 
 func TestCriteriaBaseCommand(t *testing.T) {
@@ -134,7 +135,7 @@ type testCmd struct {
 	*CriteriaBaseCommand
 }
 
-func newMockCriteriaCmd(t *testing.T, c *testCmd, p FactoryProvider, args ...string) *cobra.Command {
+func newMockCriteriaCmd(t *testing.T, c *testCmd, p basecmd.FactoryProvider, args ...string) *cobra.Command {
 	cmd := &cobra.Command{
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return c.Validate()
@@ -144,7 +145,7 @@ func newMockCriteriaCmd(t *testing.T, c *testCmd, p FactoryProvider, args ...str
 	return cmd
 }
 
-func newMockCriteriaBaseCmd(t *testing.T, cmd *cobra.Command, p FactoryProvider, args ...string) *CriteriaBaseCommand {
+func newMockCriteriaBaseCmd(t *testing.T, cmd *cobra.Command, p basecmd.FactoryProvider, args ...string) *CriteriaBaseCommand {
 	settings := environment.NewDefaultSettings()
 	settings.Streams.In = &mocks.Reader{}
 	settings.Streams.Out = &mocks.Writer{}

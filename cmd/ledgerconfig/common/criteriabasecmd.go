@@ -13,6 +13,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
 )
 
 const (
@@ -46,7 +47,7 @@ var (
 
 // CriteriaBaseCommand may be used as a BaseCommand for commands that use search criteria
 type CriteriaBaseCommand struct {
-	*BaseCommand
+	*basecmd.Command
 
 	// Flags
 	criteriaStr      string
@@ -59,9 +60,9 @@ type CriteriaBaseCommand struct {
 }
 
 // NewCriteriaBaseCommand returns a CriteriaBaseCommand
-func NewCriteriaBaseCommand(settings *environment.Settings, p FactoryProvider, cmd *cobra.Command) *CriteriaBaseCommand {
+func NewCriteriaBaseCommand(settings *environment.Settings, p basecmd.FactoryProvider, cmd *cobra.Command) *CriteriaBaseCommand {
 	c := &CriteriaBaseCommand{
-		BaseCommand: NewBaseCmd(settings, p),
+		Command: basecmd.New(settings, p),
 	}
 
 	c.Settings = settings

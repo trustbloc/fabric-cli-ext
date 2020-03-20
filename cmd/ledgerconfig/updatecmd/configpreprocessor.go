@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package updatecmd
 
 import (
+	"io/ioutil"
 	"path/filepath"
 	"strings"
 
@@ -123,5 +124,5 @@ func (cp *configPreProcessor) readFileRef(refPath string) ([]byte, error) {
 		// The path is relative to the source config file
 		path = filepath.Join(filepath.Dir(cp.configFilePath), refPath)
 	}
-	return readFile(path)
+	return ioutil.ReadFile(filepath.Clean(path))
 }

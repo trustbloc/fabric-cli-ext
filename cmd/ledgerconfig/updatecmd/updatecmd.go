@@ -9,13 +9,16 @@ package updatecmd
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
 	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/common"
 )
 
@@ -141,9 +144,9 @@ func New(settings *environment.Settings) *cobra.Command {
 	return newCmd(settings, nil)
 }
 
-func newCmd(settings *environment.Settings, p common.FactoryProvider) *cobra.Command {
+func newCmd(settings *environment.Settings, p basecmd.FactoryProvider) *cobra.Command {
 	c := &command{
-		BaseCommand: common.NewBaseCmd(settings, p),
+		Command: basecmd.New(settings, p),
 	}
 	cmd := &cobra.Command{
 		Use:     use,
@@ -174,7 +177,7 @@ func newCmd(settings *environment.Settings, p common.FactoryProvider) *cobra.Com
 
 // command implements the update command
 type command struct {
-	*common.BaseCommand
+	*basecmd.Command
 
 	// Flags
 	config     string
@@ -249,7 +252,7 @@ func (c *command) getConfigBytes() ([]byte, error) {
 	if c.config != "" {
 		return []byte(c.config), nil
 	}
-	return readFile(c.configFile)
+	return ioutil.ReadFile(filepath.Clean(c.configFile))
 }
 
 // confirmUpdate prompts the user for confirmation of the update
