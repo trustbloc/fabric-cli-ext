@@ -10,6 +10,7 @@ import (
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/deletecmd"
+	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/fileidxupdatecmd"
 	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/querycmd"
 	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/updatecmd"
 )
@@ -34,6 +35,7 @@ func New(settings *environment.Settings) *cobra.Command {
 		querycmd.New(settings),
 		updatecmd.New(settings),
 		deletecmd.New(settings),
+		fileidxupdatecmd.New(settings),
 	)
 	return cmd
 }
