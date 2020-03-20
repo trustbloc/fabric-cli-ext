@@ -26,9 +26,29 @@ replace github.com/hyperledger/fabric-sdk-go => github.com/hyperledger/fabric-sd
 /usr/bin/sed -i '' '$a\
 replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.2
 ' go.mod
+/usr/bin/sed -i '' '$a\
+replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20190617133340-57b3e21c3d56
+' go.mod
+/usr/bin/sed -i '' '$a\
+replace golang.org/x/sys => golang.org/x/sys v0.0.0-20190616124812-15dcb6c0061f
+' go.mod
+/usr/bin/sed -i '' '$a\
+replace gopkg.in/check.v1 => gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
+' go.mod
+/usr/bin/sed -i '' '$a\
+replace gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.2.4
+' go.mod
+/usr/bin/sed -i '' '$a\
+replace github.com/stretchr/testify => github.com/stretchr/testify v1.4.0
+' go.mod
 else
 sed  -e "\$areplace github.com/hyperledger/fabric-sdk-go => github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20200222173625-ff3bdd738791" -i go.mod
 sed  -e "\$areplace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.2" -i go.mod
+sed  -e "\$areplace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20190617133340-57b3e21c3d56" -i go.mod
+sed  -e "\$areplace golang.org/x/sys => golang.org/x/sys v0.0.0-20190616124812-15dcb6c0061f" -i go.mod
+sed  -e "\$areplace gopkg.in/check.v1 => gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127" -i go.mod
+sed  -e "\$areplace gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.2.4" -i go.mod
+sed  -e "\$areplace github.com/stretchr/testify => github.com/stretchr/testify v1.4.0" -i go.mod
 fi
 
 make
@@ -48,13 +68,19 @@ cd ./fabric-cli-ext
 if [ ${envOS} = 'Darwin' ]; then
 /usr/bin/sed -i ''  '$a\
 replace github.com/hyperledger/fabric-cli => ..\/fabric-cli' go.mod
+/usr/bin/sed -i ''  '$a\
+replace github.com/sirupsen/logrus => github.com/sirupsen/logrus v1.3.0' go.mod
 else
 sed  -e "\$areplace github.com/hyperledger/fabric-cli => ..\/fabric-cli" -i go.mod
+sed  -e "\$areplace github.com/sirupsen/logrus => github.com/sirupsen/logrus v1.3.0" -i go.mod
 fi
 
 # ledgerconfig
 go build -buildmode=plugin -o ../ledgerconfig/ledgerconfig.so ./cmd/ledgerconfig/ledgerconfig.go
 cp ./cmd/ledgerconfig/plugin.yaml ../ledgerconfig/
+# file
+go build -buildmode=plugin -o ../file/file.so ./cmd/file/file.go
+cp ./cmd/file/plugin.yaml ../file/
 
 cd ..
 rm -rf ./fabric-cli
