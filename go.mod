@@ -5,6 +5,7 @@
 module github.com/trustbloc/fabric-cli-ext
 
 require (
+	github.com/evanphx/json-patch v4.1.0+incompatible
 	github.com/hyperledger/fabric-cli v0.0.0-20191215205855-97c039341083
 	github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20200222173625-ff3bdd738791
 	github.com/pkg/errors v0.8.1

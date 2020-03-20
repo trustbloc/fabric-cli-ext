@@ -12,6 +12,7 @@ import (
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 
 	"github.com/trustbloc/fabric-cli-ext/cmd/file/createidxcmd"
+	"github.com/trustbloc/fabric-cli-ext/cmd/file/uploadcmd"
 )
 
 const (
@@ -33,6 +34,7 @@ func New(settings *environment.Settings) *cobra.Command {
 
 	cmd.AddCommand(
 		createidxcmd.New(settings),
+		uploadcmd.New(settings),
 	)
 
 	return cmd
