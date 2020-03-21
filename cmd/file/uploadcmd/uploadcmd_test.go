@@ -72,10 +72,10 @@ func TestUloadCmd_InvalidOptions(t *testing.T) {
 
 func TestUploadCmd(t *testing.T) {
 	const (
-		url        = "http://localhost:48326/content"
+		url        = "http://localhost:48326/content/v1"
 		files      = "./testdata/person.schema.json"
 		idxUrl     = "http://localhost:48326/file/file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA=="
-		fileIDXDoc = `{".":"/content","id":"file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA==","published":false}`
+		fileIDXDoc = `{".":"/content/v1","id":"file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA==","published":false}`
 		resp       = `[{"Name":"person.schema.json","ID":"TbVyraOqG00TacPQH5WwWGnxkszpYSEhBKRyX_f25JI=","ContentType":"application/json"}]`
 		dcasIDJSON = `"TbVyraOqG00TacPQH5WwWGnxkszpYSEhBKRyX_f25JI="`
 	)
