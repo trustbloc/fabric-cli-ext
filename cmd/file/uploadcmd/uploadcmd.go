@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"mime"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -156,12 +157,16 @@ func (c *command) validateAndProcessArgs() error {
 		return errURLRequired
 	}
 
-	pos := strings.LastIndex(c.url, "/")
-	if pos == -1 {
+	u, err := url.Parse(c.url)
+	if err != nil {
+		return errors.WithMessagef(err, "invalid URL [%s]", c.url)
+	}
+
+	if u.Path == "" {
 		return errors.New("invalid URL - no base path found")
 	}
 
-	c.basePath = c.url[pos:]
+	c.basePath = u.Path
 
 	if c.file == "" {
 		return errFilesRequired
@@ -171,7 +176,7 @@ func (c *command) validateAndProcessArgs() error {
 		return errFileIndexURLRequired
 	}
 
-	pos = strings.LastIndex(c.fileIndexURL, "/")
+	pos := strings.LastIndex(c.fileIndexURL, "/")
 	if pos == -1 {
 		return errors.Errorf("invalid file index URL: [%s]", c.fileIndexURL)
 	}
