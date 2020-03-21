@@ -1,0 +1,12 @@
+{
+  "Monitor": {
+    "Period": "3s"
+  },
+  "Namespaces": [
+    {
+      "DocType": "FILE_INDEX",
+      "Namespace": "file:idx",
+      "BasePath": "/file"
+    }
+  ]
+}

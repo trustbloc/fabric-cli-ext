@@ -43,5 +43,14 @@ jobs:
     - checkout: self
     - script: make plugins
       displayName: Build CLI plugins
-    - script: make bddtests
+    - bash: |
+        function logout {
+          docker logout
+        }
+        trap logout EXIT
+        echo $DOCKER_PASSWORD | docker login docker.pkg.github.com --username $DOCKER_USER --password-stdin
+        make bddtests
+      env:
+        DOCKER_USER: $(DOCKER_USER)
+        DOCKER_PASSWORD: $(DOCKER_PASSWORD)
       displayName: Run BDD tests

@@ -57,7 +57,7 @@ version:
 plugins:
 	@scripts/build_plugins.sh
 
-clean: clean-images
+clean:
 	rm -rf ./.build
 	rm -rf ./test/bddtests/fixtures/fabric/channel
 	rm -rf ./test/bddtests/fixtures/fabric/crypto-config
@@ -83,26 +83,12 @@ channel-config-gen:
 populate-fixtures:
 	@scripts/populate-fixtures.sh -f
 
-bddtests: populate-fixtures docker-thirdparty bddtests-fabric-peer-docker
+bddtests: populate-fixtures docker-thirdparty
 	@scripts/integration.sh
 
-bddtests-fabric-peer-cli:
-	@echo "Building fabric-peer cli"
-	@mkdir -p ./.build/bin
-	@cd test/bddtests/fixtures/fabric/peer/cmd && go build -o ../../../../../../.build/bin/fabric-peer github.com/trustbloc/fabric-cli-ext/test/bddtests/fixtures/fabric/peer/cmd
-
-bddtests-fabric-peer-docker:
-	@docker build -f ./test/bddtests/fixtures/images/fabric-peer/Dockerfile --no-cache -t trustbloc/fabric-peer-cli-test:latest \
-	--build-arg FABRIC_PEER_EXT_IMAGE=$(FABRIC_PEER_EXT_IMAGE) \
-	--build-arg FABRIC_PEER_EXT_TAG=$(FABRIC_PEER_EXT_TAG) \
-	--build-arg GO_VER=$(GO_VER) \
-	--build-arg ALPINE_VER=$(ALPINE_VER) \
-	--build-arg GO_TAGS=$(GO_TAGS) \
-	--build-arg GOPROXY=$(GOPROXY) .
-
 docker-thirdparty:
-	docker pull couchdb:2.2.0
-	docker pull hyperledger/fabric-orderer:$(ARCH)-2.0.0-alpha
+	docker pull couchdb:2.3.0
+	docker pull hyperledger/fabric-orderer:$(ARCH)-2.0.0
 
 clean-images: CONTAINER_IDS = $(shell docker ps -a -q)
 clean-images: DEV_IMAGES    = $(shell docker images dev-* -q)
