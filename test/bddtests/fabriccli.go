@@ -33,6 +33,7 @@ func (cli *FabricCLI) Exec(args ...string) (string, error) {
 	a = append(a, "--home", homeDir)
 	a = append(a, args...)
 	cmd := exec.Command(fabricCLIPath, a...)
+	cmd.Env = []string{"PROJECT_PATH=../.."}
 
 	var out bytes.Buffer
 	var er bytes.Buffer
@@ -42,11 +43,13 @@ func (cli *FabricCLI) Exec(args ...string) (string, error) {
 
 	err := cmd.Start()
 	if err != nil {
-		return "", errors.Errorf("%s: %s", err, er.Bytes())
+		return "", errors.New(out.String())
 	}
+
 	err = cmd.Wait()
 	if err != nil {
-		return "", errors.Errorf("%s: %s", err, er.Bytes())
+		return "", errors.New(out.String())
 	}
+
 	return out.String(), nil
 }

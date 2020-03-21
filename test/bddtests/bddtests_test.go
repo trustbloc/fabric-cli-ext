@@ -25,12 +25,12 @@ var composition *bddtests.Composition
 
 func TestMain(m *testing.M) {
 	projectPath, err := filepath.Abs("../..")
- 	if err != nil {
- 		panic(err.Error())
- 	}
- 	if err := os.Setenv("PROJECT_PATH", projectPath); err != nil {
- 		panic(err.Error())
- 	}
+	if err != nil {
+		panic(err.Error())
+	}
+	if err := os.Setenv("PROJECT_PATH", projectPath); err != nil {
+		panic(err.Error())
+	}
 
 	// default is to run all tests with tag @all
 	tags := "all"
@@ -107,6 +107,7 @@ func FeatureContext(s *godog.Suite) {
 	// Note: Each test after NewcommonSteps. should add unique steps only
 	bddtests.NewCommonSteps(context).RegisterSteps(s)
 	NewFabricCLISteps(context).RegisterSteps(s)
+	NewOffLedgerSteps(context).RegisterSteps(s)
 }
 
 func initBDDConfig() {

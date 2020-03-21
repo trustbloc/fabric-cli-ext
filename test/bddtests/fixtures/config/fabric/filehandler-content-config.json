@@ -1,0 +1,7 @@
+{
+  "BasePath": "/content",
+  "ChaincodeName": "files",
+  "Collection": "consortium",
+  "IndexNamespace": "file:idx",
+  "IndexDocID": ""
+}

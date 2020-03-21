@@ -22,4 +22,7 @@ defineSupportCode(function ({And, But, Given, Then, When}) {
     And(/^fabric-cli is executed with args "([^"]*)"$/, function (arg1, callback) {
         callback.pending();
     });
+    And(/^an HTTP request is sent to "([^"]*)"$/, function (arg1, callback) {
+        callback.pending();
+    });
 });
