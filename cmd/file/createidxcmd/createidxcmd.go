@@ -13,15 +13,17 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/hyperledger/fabric-cli/pkg/environment"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/trustbloc/sidetree-core-go/pkg/document"
 	"github.com/trustbloc/sidetree-core-go/pkg/restapi/helper"
 
+	"github.com/hyperledger/fabric-cli/pkg/environment"
+
 	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
 	"github.com/trustbloc/fabric-cli-ext/cmd/file/httpclient"
+	"github.com/trustbloc/fabric-cli-ext/cmd/file/model"
 )
 
 const (
@@ -155,11 +157,16 @@ func (c *command) validate() error {
 }
 
 func (c *command) run() error {
-	doc := make(map[string]interface{})
-	// Add one mapping which is the path where this index will be used
-	doc["."] = c.path
+	fileIdxDoc := &model.FileIndexDoc{
+		FileIndex: model.FileIndex{
+			BasePath: c.path,
+			Mappings: map[string]string{
+				".": c.path,
+			},
+		},
+	}
 
-	docBytes, err := json.Marshal(doc)
+	docBytes, err := json.Marshal(fileIdxDoc)
 	if err != nil {
 		return err
 	}
