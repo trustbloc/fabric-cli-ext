@@ -22,12 +22,12 @@ import (
 
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 
-	"github.com/trustbloc/sidetree-core-go/pkg/document"
 	"github.com/trustbloc/sidetree-core-go/pkg/docutil"
 	"github.com/trustbloc/sidetree-core-go/pkg/restapi/helper"
 
 	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
 	"github.com/trustbloc/fabric-cli-ext/cmd/file/httpclient"
+	"github.com/trustbloc/fabric-cli-ext/cmd/file/model"
 )
 
 const (
@@ -79,6 +79,10 @@ const (
 	msgContinueOrAbort = "Enter Y to continue or N to abort "
 
 	sha2_256 = 18
+
+	jsonPatchBasePath  = "/fileIndex/mappings/"
+	jsonPatchAddOp     = "add"
+	jsonPatchReplaceOp = "replace"
 )
 
 var (
@@ -195,7 +199,7 @@ func (c *command) validateAndProcessArgs() error {
 }
 
 func (c *command) run() error {
-	fileIdxDoc, err := c.getFileIndexDoc()
+	fileIdx, err := c.getFileIndex()
 	if err != nil {
 		return err
 	}
@@ -225,7 +229,7 @@ func (c *command) run() error {
 		file.ID = id
 	}
 
-	err = c.updateIndexFile(fileIdxDoc, f)
+	err = c.updateIndexFile(fileIdx, f)
 	if err != nil {
 		return err
 	}
@@ -274,8 +278,8 @@ func (c *command) upload(url, contentType string, fileBytes []byte) (string, err
 	return fileID, nil
 }
 
-func (c *command) updateIndexFile(fileIdxDoc document.Document, files files) error {
-	patch, err := getUpdatePatch(fileIdxDoc, files)
+func (c *command) updateIndexFile(fileIdx *model.FileIndex, files files) error {
+	patch, err := getUpdatePatch(fileIdx, files)
 	if err != nil {
 		return err
 	}
@@ -326,7 +330,7 @@ func (c *command) getUpdateRequest(patch jsonpatch.Patch) ([]byte, error) {
 	})
 }
 
-func (c *command) getFileIndexDoc() (document.Document, error) {
+func (c *command) getFileIndex() (*model.FileIndex, error) {
 	resp, err := c.client.Get(c.fileIndexURL)
 	if err != nil {
 		return nil, err
@@ -340,21 +344,18 @@ func (c *command) getFileIndexDoc() (document.Document, error) {
 		return nil, errors.Errorf("error retrieving file index document [%s] status code %d: %s", c.fileIndexURL, resp.StatusCode, resp.ErrorMsg)
 	}
 
-	var doc document.Document
-	err = json.Unmarshal(resp.Payload, &doc)
+	fileIdxDoc := &model.FileIndexDoc{}
+	err = json.Unmarshal(resp.Payload, fileIdxDoc)
 	if err != nil {
 		return nil, err
 	}
 
-	basePath, ok := doc["."]
-	if ok {
-		// Validate that the base path is correct
-		if basePath != c.basePath {
-			return nil, errors.Errorf("base path of file index doc does not match the base path of the file: [%s] != [%s]", basePath, c.basePath)
-		}
+	// Validate that the base path is correct
+	if fileIdxDoc.FileIndex.BasePath != c.basePath {
+		return nil, errors.Errorf("base path of file index doc does not match the base path of the file: [%s] != [%s]", fileIdxDoc.FileIndex.BasePath, c.basePath)
 	}
 
-	return doc, nil
+	return &fileIdxDoc.FileIndex, nil
 }
 
 func getFileInfo(path string) (*fileInfo, error) {
@@ -397,18 +398,18 @@ func contentTypeFromFileName(fileName string) (string, error) {
 	return contentType, nil
 }
 
-func getUpdatePatch(fileIdxDoc document.Document, files files) (jsonpatch.Patch, error) {
+func getUpdatePatch(fileIdx *model.FileIndex, files files) (jsonpatch.Patch, error) {
 	var patch []jsonPatch
 	for _, f := range files {
 		p := jsonPatch{
-			Path:  "/" + f.Name,
+			Path:  jsonPatchBasePath + f.Name,
 			Value: f.ID,
 		}
 
-		if _, ok := fileIdxDoc[f.Name]; ok {
-			p.Op = "replace"
+		if _, ok := fileIdx.Mappings[f.Name]; ok {
+			p.Op = jsonPatchReplaceOp
 		} else {
-			p.Op = "add"
+			p.Op = jsonPatchAddOp
 		}
 
 		patch = append(patch, p)

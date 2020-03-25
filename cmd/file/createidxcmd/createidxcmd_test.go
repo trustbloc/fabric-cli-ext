@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package createidxcmd
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -18,6 +19,7 @@ import (
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 
 	"github.com/trustbloc/fabric-cli-ext/cmd/file/httpclient"
+	"github.com/trustbloc/fabric-cli-ext/cmd/file/model"
 	"github.com/trustbloc/fabric-cli-ext/cmd/mocks"
 )
 
@@ -57,7 +59,14 @@ func TestCreateIDXCmd_InvalidOptions(t *testing.T) {
 }
 
 func TestCreateIDXCmd(t *testing.T) {
-	const doc = `{".":"/content","id":"file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA==","published":false}`
+	fileIdxDoc := &model.FileIndexDoc{
+		ID:           "file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA==",
+		UniqueSuffix: "EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA==",
+		FileIndex:    model.FileIndex{BasePath: "/content"},
+	}
+
+	fileIndexBytes, err := json.Marshal(fileIdxDoc)
+	require.NoError(t, err)
 
 	args := []string{"--url", "http://localhost:80/file", "--path", "/content", "--recoverypwd", "pwd1", "--nextpwd", "pwd1"}
 	header := map[string][]string{"Content-Type": {"application/json"}}
@@ -67,7 +76,7 @@ func TestCreateIDXCmd(t *testing.T) {
 			&http.Response{
 				StatusCode: http.StatusOK,
 				Header:     header,
-				Body:       mocks.NewResponseBody([]byte(doc)),
+				Body:       mocks.NewResponseBody(fileIndexBytes),
 			},
 		)
 
@@ -76,7 +85,7 @@ func TestCreateIDXCmd(t *testing.T) {
 		c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, args...)
 		require.NoError(t, c.Execute())
 		require.Contains(t, w.Written(), msgContinueOrAbort)
-		require.Contains(t, w.Written(), doc)
+		require.Contains(t, w.Written(), string(fileIndexBytes))
 	})
 
 	t.Run("With --noprompt", func(t *testing.T) {
@@ -84,7 +93,7 @@ func TestCreateIDXCmd(t *testing.T) {
 			&http.Response{
 				StatusCode: http.StatusOK,
 				Header:     header,
-				Body:       mocks.NewResponseBody([]byte(doc)),
+				Body:       mocks.NewResponseBody(fileIndexBytes),
 			},
 		)
 
@@ -93,7 +102,7 @@ func TestCreateIDXCmd(t *testing.T) {
 		c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, append(args, "--noprompt")...)
 		require.NoError(t, c.Execute())
 		require.NotContains(t, w.Written(), msgContinueOrAbort)
-		require.Contains(t, w.Written(), doc)
+		require.Contains(t, w.Written(), string(fileIndexBytes))
 	})
 
 	t.Run("With prompt - N", func(t *testing.T) {
@@ -103,7 +112,7 @@ func TestCreateIDXCmd(t *testing.T) {
 		require.NoError(t, c.Execute())
 		require.Contains(t, w.Written(), msgContinueOrAbort)
 		require.Contains(t, w.Written(), msgAborted)
-		require.NotContains(t, w.Written(), doc)
+		require.NotContains(t, w.Written(), fileIndexBytes)
 	})
 
 	t.Run("With prompt - output stream error", func(t *testing.T) {

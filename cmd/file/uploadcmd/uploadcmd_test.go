@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package uploadcmd
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -18,6 +19,7 @@ import (
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 
 	"github.com/trustbloc/fabric-cli-ext/cmd/file/httpclient"
+	"github.com/trustbloc/fabric-cli-ext/cmd/file/model"
 	"github.com/trustbloc/fabric-cli-ext/cmd/mocks"
 )
 
@@ -75,7 +77,6 @@ func TestUploadCmd(t *testing.T) {
 		url        = "http://localhost:48326/content/v1"
 		files      = "./testdata/person.schema.json"
 		idxUrl     = "http://localhost:48326/file/file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA=="
-		fileIDXDoc = `{".":"/content/v1","id":"file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA==","published":false}`
 		resp       = `[{"Name":"person.schema.json","ID":"TbVyraOqG00TacPQH5WwWGnxkszpYSEhBKRyX_f25JI=","ContentType":"application/json"}]`
 		dcasIDJSON = `"TbVyraOqG00TacPQH5WwWGnxkszpYSEhBKRyX_f25JI="`
 	)
@@ -85,12 +86,21 @@ func TestUploadCmd(t *testing.T) {
 		header = map[string][]string{"Content-Type": {"application/json"}}
 	)
 
+	fileIdxDoc := &model.FileIndexDoc{
+		ID:           "file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA==",
+		UniqueSuffix: "EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA==",
+		FileIndex:    model.FileIndex{BasePath: "/content/v1"},
+	}
+
+	fileIdxDocBytes, err := json.Marshal(fileIdxDoc)
+	require.NoError(t, err)
+
 	transport := mocks.NewTransport().
 		WithGetResponse(
 			&http.Response{
 				StatusCode: http.StatusOK,
 				Header:     header,
-				Body:       mocks.NewResponseBody([]byte(fileIDXDoc)),
+				Body:       mocks.NewResponseBody(fileIdxDocBytes),
 			},
 		).
 		WithPostResponse(
@@ -155,7 +165,7 @@ func TestUploadCmd(t *testing.T) {
 				&http.Response{
 					StatusCode: http.StatusOK,
 					Header:     header,
-					Body:       mocks.NewResponseBody([]byte(fileIDXDoc)),
+					Body:       mocks.NewResponseBody(fileIdxDocBytes),
 				},
 			).
 			WithPostError(errExpected)
@@ -199,19 +209,28 @@ func TestUploadCmd(t *testing.T) {
 	})
 
 	t.Run("With invalid base path", func(t *testing.T) {
-		const mismatchedFileIDXDoc = `{".":"/schema","id":"file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA==","published":false}`
+		fileIdxDoc := &model.FileIndexDoc{
+			ID:           "file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA==",
+			UniqueSuffix: "EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA==",
+			FileIndex: model.FileIndex{
+				BasePath: "/schema",
+			},
+		}
+
+		mismatchedFileIDXDoc, err := json.Marshal(fileIdxDoc)
+		require.NoError(t, err)
 
 		transport := mocks.NewTransport().
 			WithGetResponse(
 				&http.Response{
 					StatusCode: http.StatusOK,
 					Header:     header,
-					Body:       mocks.NewResponseBody([]byte(mismatchedFileIDXDoc)),
+					Body:       mocks.NewResponseBody(mismatchedFileIDXDoc),
 				},
 			)
 
 		c := newMockCmd(t, transport, append(args, "--noprompt")...)
-		err := c.Execute()
+		err = c.Execute()
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "base path of file index doc does not match the base path of the file")
 	})
