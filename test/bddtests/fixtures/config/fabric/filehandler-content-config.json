@@ -1,6 +1,6 @@
 {
   "BasePath": "/content",
-  "ChaincodeName": "files",
+  "ChaincodeName": "file",
   "Collection": "consortium",
   "IndexNamespace": "file:idx",
   "IndexDocID": ""

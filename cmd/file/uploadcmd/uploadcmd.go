@@ -16,13 +16,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 
-	"github.com/trustbloc/sidetree-core-go/pkg/docutil"
 	"github.com/trustbloc/sidetree-core-go/pkg/restapi/helper"
 
 	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
@@ -66,11 +64,11 @@ const (
 	fileIndexURLFlag  = "idxurl"
 	fileIndexURLUsage = "The URL of the file index Sidetree document to be updated with the new/updated files. Example: --idxurl http://localhost:48326/file/file:idx:1234"
 
-	fileIndexUpdateOTPFlag  = "pwd"
-	fileIndexUpdateOTPUsage = "The one time password required to update the file index Sidetree document. Example: --pwd pwd1"
+	fileIndexUpdatePWDFlag  = "pwd"
+	fileIndexUpdatePWDUsage = "The password required to update the file index Sidetree document. Example: --pwd pwd1"
 
-	fileIndexNextUpdateOTPFlag  = "nextpwd"
-	fileIndexNextUpdateOTPUsage = "The one time password required for the next update of the file index Sidetree document. Example: --nextpwd pwd2"
+	fileIndexNextUpdatePWDFlag  = "nextpwd"
+	fileIndexNextUpdatePWDUsage = "The password required for the next update of the file index Sidetree document. Example: --nextpwd pwd2"
 
 	noPromptFlag  = "noprompt"
 	noPromptUsage = "If specified then the upload operation will not prompt for confirmation. Example: --noprompt"
@@ -89,8 +87,8 @@ var (
 	errURLRequired                    = errors.New("URL (--url) is required")
 	errFilesRequired                  = errors.New("files (--files) is required")
 	errFileIndexURLRequired           = errors.New("file index URL (--idxurl) is required")
-	errFileIndexUpdateOTPRequired     = errors.New("password (--pwd) required")
-	errFileIndexNextUpdateOTPRequired = errors.New("next update password (--nextpwd) required")
+	errFileIndexUpdatePWDRequired     = errors.New("password (--pwd) required")
+	errFileIndexNextUpdatePWDRequired = errors.New("next update password (--nextpwd) required")
 	errNoFileExtension                = errors.New("content type cannot be deduced since no file extension provided")
 	errUnknownExtension               = errors.New("content type cannot be deduced from extension")
 )
@@ -134,8 +132,8 @@ func newCmd(settings *environment.Settings, client httpClient) *cobra.Command {
 	cmd.Flags().StringVar(&c.file, fileFlag, "", fileUsage)
 	cmd.Flags().StringVar(&c.url, urlFlag, "", urlUsage)
 	cmd.Flags().StringVar(&c.fileIndexURL, fileIndexURLFlag, "", fileIndexURLUsage)
-	cmd.Flags().StringVar(&c.fileIndexUpdateOTP, fileIndexUpdateOTPFlag, "", fileIndexUpdateOTPUsage)
-	cmd.Flags().StringVar(&c.fileIndexNextUpdateOTP, fileIndexNextUpdateOTPFlag, "", fileIndexNextUpdateOTPUsage)
+	cmd.Flags().StringVar(&c.fileIndexUpdatePWD, fileIndexUpdatePWDFlag, "", fileIndexUpdatePWDUsage)
+	cmd.Flags().StringVar(&c.fileIndexNextUpdatePWD, fileIndexNextUpdatePWDFlag, "", fileIndexNextUpdatePWDUsage)
 	cmd.Flags().BoolVar(&c.noPrompt, noPromptFlag, false, noPromptUsage)
 
 	return cmd
@@ -151,8 +149,8 @@ type command struct {
 	basePath               string
 	fileIndexURL           string
 	fileIndexBaseURL       string
-	fileIndexUpdateOTP     string
-	fileIndexNextUpdateOTP string
+	fileIndexUpdatePWD     string
+	fileIndexNextUpdatePWD string
 	noPrompt               bool
 }
 
@@ -185,12 +183,12 @@ func (c *command) validateAndProcessArgs() error {
 		return errors.Errorf("invalid file index URL: [%s]", c.fileIndexURL)
 	}
 
-	if c.fileIndexUpdateOTP == "" {
-		return errFileIndexUpdateOTPRequired
+	if c.fileIndexUpdatePWD == "" {
+		return errFileIndexUpdatePWDRequired
 	}
 
-	if c.fileIndexNextUpdateOTP == "" {
-		return errFileIndexNextUpdateOTPRequired
+	if c.fileIndexNextUpdatePWD == "" {
+		return errFileIndexNextUpdatePWDRequired
 	}
 
 	c.fileIndexBaseURL = c.fileIndexURL[0:pos]
@@ -315,18 +313,18 @@ func (c *command) getFiles() (files, error) {
 	return f, nil
 }
 
-func (c *command) getUpdateRequest(patch jsonpatch.Patch) ([]byte, error) {
+func (c *command) getUpdateRequest(patch string) ([]byte, error) {
 	uniqueSuffix, err := getUniqueSuffix(c.fileIndexURL)
 	if err != nil {
 		return nil, err
 	}
 
 	return helper.NewUpdateRequest(&helper.UpdateRequestInfo{
-		DidUniqueSuffix: uniqueSuffix,
-		UpdateOTP:       docutil.EncodeToString([]byte(c.fileIndexUpdateOTP)),
-		NextUpdateOTP:   docutil.EncodeToString([]byte(c.fileIndexNextUpdateOTP)),
-		Patch:           patch,
-		MultihashCode:   sha2_256,
+		DidUniqueSuffix:       uniqueSuffix,
+		UpdateRevealValue:     []byte(c.fileIndexUpdatePWD),
+		NextUpdateRevealValue: []byte(c.fileIndexNextUpdatePWD),
+		Patch:                 patch,
+		MultihashCode:         sha2_256,
 	})
 }
 
@@ -398,7 +396,7 @@ func contentTypeFromFileName(fileName string) (string, error) {
 	return contentType, nil
 }
 
-func getUpdatePatch(fileIdx *model.FileIndex, files files) (jsonpatch.Patch, error) {
+func getUpdatePatch(fileIdx *model.FileIndex, files files) (string, error) {
 	var patch []jsonPatch
 	for _, f := range files {
 		p := jsonPatch{
@@ -417,15 +415,10 @@ func getUpdatePatch(fileIdx *model.FileIndex, files files) (jsonpatch.Patch, err
 
 	patchBytes, err := json.Marshal(patch)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	jsonPatch, err := jsonpatch.DecodePatch(patchBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	return jsonPatch, nil
+	return string(patchBytes), nil
 }
 
 func getUniqueSuffix(id string) (string, error) {
