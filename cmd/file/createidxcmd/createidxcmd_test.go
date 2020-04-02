@@ -50,11 +50,11 @@ func TestCreateIDXCmd_InvalidOptions(t *testing.T) {
 	})
 
 	t.Run("Recovery password required", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path).Execute(), errRecoveryOTPRequired.Error())
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path).Execute(), errRecoveryPWDRequired.Error())
 	})
 
 	t.Run("Next update password required", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path, recoverypwdFlag, pwd).Execute(), errNextUpdateOTPRequired.Error())
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path, recoverypwdFlag, pwd).Execute(), errNextUpdatePWDRequired.Error())
 	})
 }
 

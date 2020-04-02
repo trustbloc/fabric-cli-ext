@@ -7,7 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package createidxcmd
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -52,11 +51,11 @@ const (
 	pathFlag  = "path"
 	pathUsage = "The base path of the endpoint that will be indexed by this document. Example: --path /schema"
 
-	recoveryOTPFlag  = "recoverypwd"
-	recoveryOTPUsage = "The password for recovery of the document. Example: --recoverypwd myrecoverypwd"
+	recoveryPWDFlag  = "recoverypwd"
+	recoveryPWDUsage = "The password for recovery of the document. Example: --recoverypwd myrecoverypwd"
 
-	nextUpdateOTPFlag  = "nextpwd"
-	nextUpdateOTPUsage = "The password for the next update of the document. Example: --nextpwd pwd2"
+	nextUpdatePWDFlag  = "nextpwd"
+	nextUpdatePWDUsage = "The password for the next update of the document. Example: --nextpwd pwd2"
 
 	noPromptFlag  = "noprompt"
 	noPromptUsage = "If specified then the operation will not prompt for confirmation. Example: --noprompt"
@@ -69,8 +68,8 @@ const (
 
 var (
 	errURLRequired           = errors.New("URL (--url) is required")
-	errRecoveryOTPRequired   = errors.New("recovery password (--recoverypwd) is required")
-	errNextUpdateOTPRequired = errors.New("next update password (--nextpwd) is required")
+	errRecoveryPWDRequired   = errors.New("recovery password (--recoverypwd) is required")
+	errNextUpdatePWDRequired = errors.New("next update password (--nextpwd) is required")
 	errPathRequired          = errors.New("path (--path) is required")
 	errInvalidPath           = errors.New("path (--path) must begin with '/'")
 )
@@ -112,8 +111,8 @@ func newCmd(settings *environment.Settings, client httpClient) *cobra.Command {
 
 	cmd.Flags().StringVar(&c.url, urlFlag, "", urlUsage)
 	cmd.Flags().StringVar(&c.path, pathFlag, "", pathUsage)
-	cmd.Flags().StringVar(&c.recoveryOTP, recoveryOTPFlag, "", recoveryOTPUsage)
-	cmd.Flags().StringVar(&c.nextUpdateOTP, nextUpdateOTPFlag, "", nextUpdateOTPUsage)
+	cmd.Flags().StringVar(&c.recoveryPWD, recoveryPWDFlag, "", recoveryPWDUsage)
+	cmd.Flags().StringVar(&c.nextUpdatePWD, nextUpdatePWDFlag, "", nextUpdatePWDUsage)
 	cmd.Flags().BoolVar(&c.noPrompt, noPromptFlag, false, noPromptUsage)
 
 	return cmd
@@ -127,8 +126,8 @@ type command struct {
 	// Flags
 	url           string
 	path          string
-	recoveryOTP   string
-	nextUpdateOTP string
+	recoveryPWD   string
+	nextUpdatePWD string
 	noPrompt      bool
 }
 
@@ -145,12 +144,12 @@ func (c *command) validate() error {
 		return errInvalidPath
 	}
 
-	if c.recoveryOTP == "" {
-		return errRecoveryOTPRequired
+	if c.recoveryPWD == "" {
+		return errRecoveryPWDRequired
 	}
 
-	if c.nextUpdateOTP == "" {
-		return errNextUpdateOTPRequired
+	if c.nextUpdatePWD == "" {
+		return errNextUpdatePWDRequired
 	}
 
 	return nil
@@ -211,14 +210,15 @@ func (c *command) newCreateRequest(content string) ([]byte, error) {
 
 	return helper.NewCreateRequest(
 		&helper.CreateRequestInfo{
-			OpaqueDocument:  doc,
-			RecoveryKey:     "recoveryKey", // Should this be hard-coded?
-			NextRecoveryOTP: base64.URLEncoding.EncodeToString([]byte(c.recoveryOTP)),
-			MultihashCode:   sha2_256,
-			NextUpdateOTP:   base64.URLEncoding.EncodeToString([]byte(c.nextUpdateOTP)),
+			OpaqueDocument:          doc,
+			RecoveryKey:             "recoveryKey", // Should this be hard-coded?
+			NextRecoveryRevealValue: []byte(c.recoveryPWD),
+			NextUpdateRevealValue:   []byte(c.nextUpdatePWD),
+			MultihashCode:           sha2_256,
 		},
 	)
 }
+
 func (c *command) confirm() (bool, error) {
 	prompt := fmt.Sprintf("Creating file index document for path [%s]\n%s", c.path, msgContinueOrAbort)
 

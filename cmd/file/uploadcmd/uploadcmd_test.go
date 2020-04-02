@@ -64,11 +64,11 @@ func TestUloadCmd_InvalidOptions(t *testing.T) {
 	})
 
 	t.Run("No --pwd", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl).Execute(), errFileIndexUpdateOTPRequired.Error())
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl).Execute(), errFileIndexUpdatePWDRequired.Error())
 	})
 
 	t.Run("No --nextpwd", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl, pwdFlag, pwd).Execute(), errFileIndexNextUpdateOTPRequired.Error())
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl, pwdFlag, pwd).Execute(), errFileIndexNextUpdatePWDRequired.Error())
 	})
 }
 
