@@ -14,12 +14,12 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
     Then we wait 10 seconds
 
     Given DCAS collection config "dcas-cfg" is defined for collection "dcas" as policy="OR('Org1MSP.member','Org2MSP.member')", requiredPeerCount=1, maxPeerCount=2, and timeToLive=
-    Given off-ledger collection config "fileidx-cfg" is defined for collection "fileidxdoc" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=1, and timeToLive=
-    Given off-ledger collection config "meta-data-cfg" is defined for collection "meta_data" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=1, and timeToLive=
+    Given off-ledger collection config "fileidx-cfg" is defined for collection "fileidxdoc" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=0, and timeToLive=
+    Given off-ledger collection config "meta-data-cfg" is defined for collection "meta_data" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=0, and timeToLive=
     Given DCAS collection config "consortium-files-cfg" is defined for collection "consortium" as policy="OR('Org1MSP.member','Org2MSP.member')", requiredPeerCount=1, maxPeerCount=2, and timeToLive=
 
     Then "system" chaincode "configscc" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "AND('Org1MSP.member','Org2MSP.member')" with collection policy ""
-    And "system" chaincode "sidetreetxn_cc" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "AND('Org1MSP.member','Org2MSP.member')" with collection policy "dcas-cfg"
+    And "system" chaincode "sidetreetxn" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "AND('Org1MSP.member','Org2MSP.member')" with collection policy "dcas-cfg"
     And "system" chaincode "document" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "OR('Org1MSP.member','Org2MSP.member')" with collection policy "fileidx-cfg,meta-data-cfg"
     And "system" chaincode "file" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "OR('Org1MSP.member','Org2MSP.member')" with collection policy "consortium-files-cfg"
 
@@ -41,7 +41,7 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
   @sidetree_file_s1
   Scenario: Test the file command
     # Create a file index document
-    When fabric-cli is executed with args "file createidx --path /content --url http://localhost:48326/file --recoverypwd pwd1 --nextpwd pwd1 --noprompt"
+    When fabric-cli is executed with args "file createidx --path /content --url http://localhost:48326/file --recoverypwd pwd1 --nextpwd pwd1 --recoverykeyfile ./fixtures/testdata/keys/recover/public.key --updatekeyfile ./fixtures/testdata/keys/update/public.key --noprompt"
     And the JSON path "id" of the response is saved to variable "fileIdxID"
 
     # Update the file handler configuration for the '/content' path with the ID of the file index document
@@ -54,7 +54,7 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
     Then the JSON path "id" of the response equals "${fileIdxID}"
 
     # Upload a couple of files and add them to the file index document
-    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/arrays.schema.json;./fixtures/testdata/v1/geographical-location.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --pwd pwd1 --nextpwd pwd2 --noprompt"
+    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/arrays.schema.json;./fixtures/testdata/v1/geographical-location.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --pwd pwd1 --nextpwd pwd2 --signingkeyfile ./fixtures/testdata/keys/update/private.key --noprompt"
     Then the JSON path "#" of the response has 2 items
     And the JSON path "0.Name" of the response equals "arrays.schema.json"
     And the JSON path "0.ContentType" of the response equals "application/json"
@@ -88,7 +88,7 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
     Then the JSON path "$id" of the response equals "https://example.com/geographical-location.schema.json"
 
     # Upload more files and add them to the file index document. Note that arrays.schema.json is updated to v2
-    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/person.schema.json;./fixtures/testdata/v1/raised-hand.png;./fixtures/testdata/v1/text1.txt;./fixtures/testdata/v2/arrays.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --pwd pwd2 --nextpwd pwd3 --noprompt"
+    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/person.schema.json;./fixtures/testdata/v1/raised-hand.png;./fixtures/testdata/v1/text1.txt;./fixtures/testdata/v2/arrays.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --pwd pwd2 --nextpwd pwd3 --signingkeyfile ./fixtures/testdata/keys/update/private.key --noprompt"
     Then the JSON path "#" of the response has 4 items
     And the JSON path "0.Name" of the response equals "person.schema.json"
     And the JSON path "0.ContentType" of the response equals "application/json"

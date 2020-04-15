@@ -6,6 +6,11 @@ SPDX-License-Identifier: Apache-2.0
 
 package model
 
+const (
+	// UpdateKeyID is the ID of the public key within the document that is used for signature verification of updates
+	UpdateKeyID = "#updatePublicKey"
+)
+
 // FileIndexDoc contains a file index document
 type FileIndexDoc struct {
 	ID           string    `json:"id"`

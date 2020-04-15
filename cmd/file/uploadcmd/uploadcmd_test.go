@@ -23,20 +23,32 @@ import (
 	"github.com/trustbloc/fabric-cli-ext/cmd/mocks"
 )
 
+const (
+	signingKey = `
+-----BEGIN PRIVATE KEY-----
+MHcCAQEEICGc6pOTBng8ZC8ZL/oNLGb1vQrHzmRSTQzKu/kKji/2oAoGCCqGSM49
+AwEHoUQDQgAEbENaETENCgl8+qgls5JBgogX8Vp1G8qXPRBB6W9pzfiphvbPl52B
+9PLZAWFLcHsP3jsdhag9KNSeVKrQtRshPw==
+-----END PRIVATE KEY-----`
+)
+
 func TestUloadCmd_New(t *testing.T) {
 	require.NotNil(t, New(environment.NewDefaultSettings()))
 }
 
 func TestUloadCmd_InvalidOptions(t *testing.T) {
 	const (
-		urlFlag    = "--url"
-		url        = "http://localhost:80/content"
-		filesFlag  = "--files"
-		files      = "./samplefile.json"
-		idxUrlFlag = "--idxurl"
-		idxUrl     = "http://localhost:80/file/file:idx:1234"
-		pwdFlag    = "--pwd"
-		pwd        = "pwd1"
+		urlFlag            = "--url"
+		url                = "http://localhost:80/content"
+		filesFlag          = "--files"
+		files              = "./samplefile.json"
+		idxUrlFlag         = "--idxurl"
+		idxUrl             = "http://localhost:80/file/file:idx:1234"
+		pwdFlag            = "--pwd"
+		nextpwdFlag        = "--nextpwd"
+		pwd                = "pwd1"
+		signingkeyFlag     = "--signingkey"
+		signingkeyfileFlag = "--signingkeyfile"
 	)
 
 	t.Run("No options", func(t *testing.T) {
@@ -70,6 +82,14 @@ func TestUloadCmd_InvalidOptions(t *testing.T) {
 	t.Run("No --nextpwd", func(t *testing.T) {
 		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl, pwdFlag, pwd).Execute(), errFileIndexNextUpdatePWDRequired.Error())
 	})
+
+	t.Run("Update key required", func(t *testing.T) {
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl, pwdFlag, pwd, nextpwdFlag, pwd).Execute(), errSigningKeyOrFileRequired.Error())
+	})
+
+	t.Run("Update key and file specified", func(t *testing.T) {
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl, pwdFlag, pwd, nextpwdFlag, pwd, signingkeyFlag, signingKey, signingkeyfileFlag, "./key").Execute(), errOnlyOneOfSigningKeyOrFileRequired.Error())
+	})
 }
 
 func TestUploadCmd(t *testing.T) {
@@ -82,7 +102,7 @@ func TestUploadCmd(t *testing.T) {
 	)
 
 	var (
-		args   = []string{"--url", url, "--files", files, "--idxurl", idxUrl, "--pwd", "pwd1", "--nextpwd", "pwd2"}
+		args   = []string{"--url", url, "--files", files, "--idxurl", idxUrl, "--pwd", "pwd1", "--nextpwd", "pwd2", "--signingkey", signingKey}
 		header = map[string][]string{"Content-Type": {"application/json"}}
 	)
 
@@ -127,6 +147,39 @@ func TestUploadCmd(t *testing.T) {
 		require.NoError(t, c.Execute())
 		require.NotContains(t, w.Written(), msgContinueOrAbort)
 		require.Contains(t, w.Written(), resp)
+	})
+
+	t.Run("With invalid key", func(t *testing.T) {
+		w := &mocks.Writer{}
+
+		args := []string{"--url", url, "--files", files, "--idxurl", idxUrl, "--pwd", "pwd1", "--nextpwd", "pwd2", "--signingkey", "xxx", "--noprompt"}
+		c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, args...)
+		err := c.Execute()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), errPrivateKeyNotFoundInPEM.Error())
+		require.Contains(t, w.Written(), err.Error())
+	})
+
+	t.Run("With key file", func(t *testing.T) {
+		args := []string{"--url", url, "--files", files, "--idxurl", idxUrl, "--pwd", "pwd1", "--nextpwd", "pwd2", "--noprompt"}
+
+		t.Run("Success", func(t *testing.T) {
+			w := &mocks.Writer{}
+			c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, append(args, "--signingkeyfile", "../testdata/update_private.key")...)
+			require.NoError(t, c.Execute())
+			require.NotContains(t, w.Written(), msgContinueOrAbort)
+			require.Contains(t, w.Written(), resp)
+		})
+
+		t.Run("Key file not found -> error", func(t *testing.T) {
+			w := &mocks.Writer{}
+			c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, append(args, "--signingkeyfile", "./xxx.key")...)
+
+			err := c.Execute()
+			require.Error(t, err)
+			require.Contains(t, err.Error(), "no such file or directory")
+			require.Contains(t, w.Written(), err.Error())
+		})
 	})
 
 	t.Run("With prompt - N", func(t *testing.T) {

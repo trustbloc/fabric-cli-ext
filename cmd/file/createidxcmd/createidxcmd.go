@@ -7,18 +7,25 @@ SPDX-License-Identifier: Apache-2.0
 package createidxcmd
 
 import (
+	"crypto"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/trustbloc/sidetree-core-go/pkg/document"
-	"github.com/trustbloc/sidetree-core-go/pkg/restapi/helper"
-
 	"github.com/hyperledger/fabric-cli/pkg/environment"
+
+	"github.com/trustbloc/sidetree-core-go/pkg/document"
+	"github.com/trustbloc/sidetree-core-go/pkg/jws"
+	"github.com/trustbloc/sidetree-core-go/pkg/restapi/helper"
+	"github.com/trustbloc/sidetree-core-go/pkg/util/pubkey"
 
 	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
 	"github.com/trustbloc/fabric-cli-ext/cmd/file/httpclient"
@@ -54,8 +61,20 @@ const (
 	recoveryPWDFlag  = "recoverypwd"
 	recoveryPWDUsage = "The password for recovery of the document. Example: --recoverypwd myrecoverypwd"
 
+	recoveryKeyFlag  = "recoverykey"
+	recoveryKeyUsage = "The public key PEM used for recovery of the document. Example: --recoverykey 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXlp4fWF5rgLthKr20tsJ0tBIE6UmrGuAC8iVG/DaedkSt7HihCx/t2BGjooduaKwEIOmPjx2zBsbkbFrYhhnVw'"
+
+	recoveryKeyFileFlag  = "recoverykeyfile"
+	recoveryKeyFileUsage = "The file that contains the public key PEM used for recovery of the document. Example: --recoverykeyfile ./recovery_public.key"
+
 	nextUpdatePWDFlag  = "nextpwd"
 	nextUpdatePWDUsage = "The password for the next update of the document. Example: --nextpwd pwd2"
+
+	updateKeyFlag  = "updatekey"
+	updateKeyUsage = "The public key PEM used for validating the signature of the next update of the document. Example: --updatekey 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEFMy2n9jYZChYSjdhK9vUWvPjz9tzBcEa13Ye33haxFsT//3kGxOQhI7yb3MJsDvwLtdfLL6txM3RdOrmLABBvw'"
+
+	updateKeyFileFlag  = "updatekeyfile"
+	updateKeyFileUsage = "The file that contains the public key PEM used for validating the signature of the next update of the document. Example: --updatekeyfile ./update_public.key"
 
 	noPromptFlag  = "noprompt"
 	noPromptUsage = "If specified then the operation will not prompt for confirmation. Example: --noprompt"
@@ -64,14 +83,22 @@ const (
 	msgContinueOrAbort = "Enter Y to continue or N to abort "
 
 	sha2_256 = 18
+
+	publicKeyField    = "publicKey"
+	publicKeyTemplate = `[{"id":"%s","type":"JwsVerificationKey2020","usage":["ops"],"publicKeyJwk":%s}]`
 )
 
 var (
-	errURLRequired           = errors.New("URL (--url) is required")
-	errRecoveryPWDRequired   = errors.New("recovery password (--recoverypwd) is required")
-	errNextUpdatePWDRequired = errors.New("next update password (--nextpwd) is required")
-	errPathRequired          = errors.New("path (--path) is required")
-	errInvalidPath           = errors.New("path (--path) must begin with '/'")
+	errURLRequired                        = errors.New("URL (--url) is required")
+	errRecoveryPWDRequired                = errors.New("recovery password (--recoverypwd) is required")
+	errNextUpdatePWDRequired              = errors.New("next update password (--nextpwd) is required")
+	errPathRequired                       = errors.New("path (--path) is required")
+	errInvalidPath                        = errors.New("path (--path) must begin with '/'")
+	errRecoveryKeyOrFileRequired          = errors.New("either recovery key (--recoverykey) or key file (--recoverykeyfile) is required")
+	errOnlyOneOfRecoveryKeyOrFileRequired = errors.New("only one of recovery key (--recoverykey) or key file (--recoverykeyfile) may be specified")
+	errUpdateKeyOrFileRequired            = errors.New("either update key (--updatekey) or key file (--updatekeyfile) is required")
+	errOnlyOneOfUpdateKeyOrFileRequired   = errors.New("only one of Update key (--updatekey) or key file (--updatekeyfile) may be specified")
+	errPublicKeyNotFoundInPEM             = errors.New("public key not found in PEM")
 )
 
 type httpClient interface {
@@ -112,7 +139,11 @@ func newCmd(settings *environment.Settings, client httpClient) *cobra.Command {
 	cmd.Flags().StringVar(&c.url, urlFlag, "", urlUsage)
 	cmd.Flags().StringVar(&c.path, pathFlag, "", pathUsage)
 	cmd.Flags().StringVar(&c.recoveryPWD, recoveryPWDFlag, "", recoveryPWDUsage)
+	cmd.Flags().StringVar(&c.recoveryKeyString, recoveryKeyFlag, "", recoveryKeyUsage)
+	cmd.Flags().StringVar(&c.recoveryKeyFile, recoveryKeyFileFlag, "", recoveryKeyFileUsage)
 	cmd.Flags().StringVar(&c.nextUpdatePWD, nextUpdatePWDFlag, "", nextUpdatePWDUsage)
+	cmd.Flags().StringVar(&c.updateKeyString, updateKeyFlag, "", updateKeyUsage)
+	cmd.Flags().StringVar(&c.updateKeyFile, updateKeyFileFlag, "", updateKeyFileUsage)
 	cmd.Flags().BoolVar(&c.noPrompt, noPromptFlag, false, noPromptUsage)
 
 	return cmd
@@ -124,11 +155,15 @@ type command struct {
 	client httpClient
 
 	// Flags
-	url           string
-	path          string
-	recoveryPWD   string
-	nextUpdatePWD string
-	noPrompt      bool
+	url               string
+	path              string
+	recoveryPWD       string
+	nextUpdatePWD     string
+	noPrompt          bool
+	recoveryKeyFile   string
+	recoveryKeyString string
+	updateKeyFile     string
+	updateKeyString   string
 }
 
 func (c *command) validate() error {
@@ -150,6 +185,14 @@ func (c *command) validate() error {
 
 	if c.nextUpdatePWD == "" {
 		return errNextUpdatePWDRequired
+	}
+
+	if err := c.validateRecoveryKey(); err != nil {
+		return err
+	}
+
+	if err := c.validateUpdateKey(); err != nil {
+		return err
 	}
 
 	return nil
@@ -203,7 +246,12 @@ func (c *command) run() error {
 }
 
 func (c *command) newCreateRequest(content string) ([]byte, error) {
-	doc, err := getOpaqueDocument(content)
+	doc, err := c.getOpaqueDocument(content)
+	if err != nil {
+		return nil, err
+	}
+
+	recoveryKey, err := c.recoveryKeyJWK()
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +259,7 @@ func (c *command) newCreateRequest(content string) ([]byte, error) {
 	return helper.NewCreateRequest(
 		&helper.CreateRequestInfo{
 			OpaqueDocument:          doc,
-			RecoveryKey:             "recoveryKey", // Should this be hard-coded?
+			RecoveryKey:             recoveryKey,
 			NextRecoveryRevealValue: []byte(c.recoveryPWD),
 			NextUpdateRevealValue:   []byte(c.nextUpdatePWD),
 			MultihashCode:           sha2_256,
@@ -230,12 +278,65 @@ func (c *command) confirm() (bool, error) {
 	return strings.ToLower(c.Prompt()) == "y", nil
 }
 
-func getOpaqueDocument(content string) (string, error) {
-	doc, err := document.FromBytes([]byte(content))
+func (c *command) recoveryKeyJWK() (*jws.JWK, error) {
+	publicKey, err := c.recoveryPublicKey()
+	if err != nil {
+		return nil, err
+	}
 
+	return pubkey.GetPublicKeyJWK(publicKey)
+}
+
+func (c *command) recoveryPublicKey() (crypto.PublicKey, error) {
+	if c.recoveryKeyFile != "" {
+		return publicKeyFromFile(c.recoveryKeyFile)
+	}
+
+	return publicKeyFromPEM([]byte(c.recoveryKeyString))
+}
+
+func (c *command) updateKeyJWK() (*jws.JWK, error) {
+	publicKey, err := c.updatePublicKey()
+	if err != nil {
+		return nil, err
+	}
+
+	return pubkey.GetPublicKeyJWK(publicKey)
+}
+
+func (c *command) updatePublicKey() (crypto.PublicKey, error) {
+	if c.updateKeyFile != "" {
+		return publicKeyFromFile(c.updateKeyFile)
+	}
+
+	return publicKeyFromPEM([]byte(c.updateKeyString))
+}
+
+func (c *command) getOpaqueDocument(content string) (string, error) {
+	updatePublicKey, err := c.updateKeyJWK()
 	if err != nil {
 		return "", err
 	}
+
+	publicKeyBytes, err := json.Marshal(updatePublicKey)
+	if err != nil {
+		return "", err
+	}
+
+	publicKeysStr := fmt.Sprintf(publicKeyTemplate, model.UpdateKeyID, string(publicKeyBytes))
+
+	var publicKeys []map[string]interface{}
+	err = json.Unmarshal([]byte(publicKeysStr), &publicKeys)
+	if err != nil {
+		return "", err
+	}
+
+	doc, err := document.FromBytes([]byte(content))
+	if err != nil {
+		return "", err
+	}
+
+	doc[publicKeyField] = publicKeys
 
 	bytes, err := doc.Bytes()
 	if err != nil {
@@ -243,4 +344,56 @@ func getOpaqueDocument(content string) (string, error) {
 	}
 
 	return string(bytes), nil
+}
+
+func (c *command) validateUpdateKey() error {
+	if c.updateKeyFile == "" && c.updateKeyString == "" {
+		return errUpdateKeyOrFileRequired
+	}
+
+	if c.updateKeyFile != "" && c.updateKeyString != "" {
+		return errOnlyOneOfUpdateKeyOrFileRequired
+	}
+
+	return nil
+}
+
+func (c *command) validateRecoveryKey() error {
+	if c.recoveryKeyFile == "" && c.recoveryKeyString == "" {
+		return errRecoveryKeyOrFileRequired
+	}
+
+	if c.recoveryKeyFile != "" && c.recoveryKeyString != "" {
+		return errOnlyOneOfRecoveryKeyOrFileRequired
+	}
+
+	return nil
+}
+
+func publicKeyFromFile(file string) (crypto.PublicKey, error) {
+	keyBytes, err := ioutil.ReadFile(filepath.Clean(file))
+	if err != nil {
+		return nil, err
+	}
+
+	return publicKeyFromPEM(keyBytes)
+}
+
+func publicKeyFromPEM(pubKeyPEM []byte) (crypto.PublicKey, error) {
+	block, _ := pem.Decode(pubKeyPEM)
+	if block == nil {
+		return nil, errPublicKeyNotFoundInPEM
+	}
+
+	key, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	publicKey, ok := key.(crypto.PublicKey)
+	if !ok {
+		return nil, errors.New("invalid public key")
+	}
+
+	return publicKey, nil
 }
