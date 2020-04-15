@@ -7,7 +7,10 @@ SPDX-License-Identifier: Apache-2.0
 package uploadcmd
 
 import (
+	"crypto/ecdsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"mime"
@@ -21,7 +24,9 @@ import (
 
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 
+	"github.com/trustbloc/sidetree-core-go/pkg/patch"
 	"github.com/trustbloc/sidetree-core-go/pkg/restapi/helper"
+	"github.com/trustbloc/sidetree-core-go/pkg/util/ecsigner"
 
 	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
 	"github.com/trustbloc/fabric-cli-ext/cmd/file/httpclient"
@@ -70,13 +75,20 @@ const (
 	fileIndexNextUpdatePWDFlag  = "nextpwd"
 	fileIndexNextUpdatePWDUsage = "The password required for the next update of the file index Sidetree document. Example: --nextpwd pwd2"
 
+	fileIndexSigningKeyFlag  = "signingkey"
+	fileIndexSigningKeyUsage = "The private key PEM used for signing the update of the index document. Example: --signingkey 'MHcCAQEEILmfa4yss8nsTJK2hKl+LAoiwW3p+eQzaHfITI9z8ptpoAoGCCqGSM49AwEHoUQDQgAEMd1/e/Nxh73bK12PEEcNSY9HxnP0N8er9ww9rjq1tNcsqfRjlL0bdTh9Basfn/4JrQHUHc6uS99yjQc+0u2bVg'"
+
+	fileIndexSigningKeyFileFlag  = "signingkeyfile"
+	fileIndexSigningKeyFileUsage = "The file that contains the private key PEM used for signing the update of the index document. Example: --signingkeyfile ./keys/signing.key"
+
 	noPromptFlag  = "noprompt"
 	noPromptUsage = "If specified then the upload operation will not prompt for confirmation. Example: --noprompt"
 
 	msgAborted         = "Operation aborted"
 	msgContinueOrAbort = "Enter Y to continue or N to abort "
 
-	sha2_256 = 18
+	sha2_256         = 18
+	signingAlgorithm = "ES256"
 
 	jsonPatchBasePath  = "/fileIndex/mappings/"
 	jsonPatchAddOp     = "add"
@@ -84,13 +96,16 @@ const (
 )
 
 var (
-	errURLRequired                    = errors.New("URL (--url) is required")
-	errFilesRequired                  = errors.New("files (--files) is required")
-	errFileIndexURLRequired           = errors.New("file index URL (--idxurl) is required")
-	errFileIndexUpdatePWDRequired     = errors.New("password (--pwd) required")
-	errFileIndexNextUpdatePWDRequired = errors.New("next update password (--nextpwd) required")
-	errNoFileExtension                = errors.New("content type cannot be deduced since no file extension provided")
-	errUnknownExtension               = errors.New("content type cannot be deduced from extension")
+	errURLRequired                       = errors.New("URL (--url) is required")
+	errFilesRequired                     = errors.New("files (--files) is required")
+	errFileIndexURLRequired              = errors.New("file index URL (--idxurl) is required")
+	errFileIndexUpdatePWDRequired        = errors.New("password (--pwd) required")
+	errFileIndexNextUpdatePWDRequired    = errors.New("next update password (--nextpwd) required")
+	errNoFileExtension                   = errors.New("content type cannot be deduced since no file extension provided")
+	errUnknownExtension                  = errors.New("content type cannot be deduced from extension")
+	errSigningKeyOrFileRequired          = errors.New("either signing key (--signingkey) or key file (--signingkeyfile) is required")
+	errOnlyOneOfSigningKeyOrFileRequired = errors.New("only one of signing key (--signingkey) or key file (--signingkeyfile) may be specified")
+	errPrivateKeyNotFoundInPEM           = errors.New("private key not found in PEM")
 )
 
 type httpClient interface {
@@ -134,6 +149,8 @@ func newCmd(settings *environment.Settings, client httpClient) *cobra.Command {
 	cmd.Flags().StringVar(&c.fileIndexURL, fileIndexURLFlag, "", fileIndexURLUsage)
 	cmd.Flags().StringVar(&c.fileIndexUpdatePWD, fileIndexUpdatePWDFlag, "", fileIndexUpdatePWDUsage)
 	cmd.Flags().StringVar(&c.fileIndexNextUpdatePWD, fileIndexNextUpdatePWDFlag, "", fileIndexNextUpdatePWDUsage)
+	cmd.Flags().StringVar(&c.fileIndexSigningKeyString, fileIndexSigningKeyFlag, "", fileIndexSigningKeyUsage)
+	cmd.Flags().StringVar(&c.fileIndexSigningKeyFile, fileIndexSigningKeyFileFlag, "", fileIndexSigningKeyFileUsage)
 	cmd.Flags().BoolVar(&c.noPrompt, noPromptFlag, false, noPromptUsage)
 
 	return cmd
@@ -144,14 +161,16 @@ type command struct {
 	*basecmd.Command
 	client httpClient
 
-	file                   string
-	url                    string
-	basePath               string
-	fileIndexURL           string
-	fileIndexBaseURL       string
-	fileIndexUpdatePWD     string
-	fileIndexNextUpdatePWD string
-	noPrompt               bool
+	file                      string
+	url                       string
+	basePath                  string
+	fileIndexURL              string
+	fileIndexBaseURL          string
+	fileIndexUpdatePWD        string
+	fileIndexNextUpdatePWD    string
+	fileIndexSigningKeyFile   string
+	fileIndexSigningKeyString string
+	noPrompt                  bool
 }
 
 func (c *command) validateAndProcessArgs() error {
@@ -189,6 +208,10 @@ func (c *command) validateAndProcessArgs() error {
 
 	if c.fileIndexNextUpdatePWD == "" {
 		return errFileIndexNextUpdatePWDRequired
+	}
+
+	if err := c.validateSigningKey(); err != nil {
+		return err
 	}
 
 	c.fileIndexBaseURL = c.fileIndexURL[0:pos]
@@ -313,8 +336,18 @@ func (c *command) getFiles() (files, error) {
 	return f, nil
 }
 
-func (c *command) getUpdateRequest(patch string) ([]byte, error) {
+func (c *command) getUpdateRequest(patchStr string) ([]byte, error) {
 	uniqueSuffix, err := getUniqueSuffix(c.fileIndexURL)
+	if err != nil {
+		return nil, err
+	}
+
+	updatePatch, err := patch.NewJSONPatch(patchStr)
+	if err != nil {
+		return nil, err
+	}
+
+	updateKeySigner, err := c.updateKeySigner()
 	if err != nil {
 		return nil, err
 	}
@@ -323,8 +356,9 @@ func (c *command) getUpdateRequest(patch string) ([]byte, error) {
 		DidUniqueSuffix:       uniqueSuffix,
 		UpdateRevealValue:     []byte(c.fileIndexUpdatePWD),
 		NextUpdateRevealValue: []byte(c.fileIndexNextUpdatePWD),
-		Patch:                 patch,
+		Patch:                 updatePatch,
 		MultihashCode:         sha2_256,
+		Signer:                updateKeySigner,
 	})
 }
 
@@ -354,6 +388,35 @@ func (c *command) getFileIndex() (*model.FileIndex, error) {
 	}
 
 	return &fileIdxDoc.FileIndex, nil
+}
+
+func (c *command) updateKeySigner() (helper.Signer, error) {
+	privateKey, err := c.signingPrivateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	return ecsigner.New(privateKey, signingAlgorithm, model.UpdateKeyID), nil
+}
+
+func (c *command) signingPrivateKey() (*ecdsa.PrivateKey, error) {
+	if c.fileIndexSigningKeyFile != "" {
+		return privateKeyFromFile(c.fileIndexSigningKeyFile)
+	}
+
+	return privateKeyFromPEM([]byte(c.fileIndexSigningKeyString))
+}
+
+func (c *command) validateSigningKey() error {
+	if c.fileIndexSigningKeyFile == "" && c.fileIndexSigningKeyString == "" {
+		return errSigningKeyOrFileRequired
+	}
+
+	if c.fileIndexSigningKeyFile != "" && c.fileIndexSigningKeyString != "" {
+		return errOnlyOneOfSigningKeyOrFileRequired
+	}
+
+	return nil
 }
 
 func getFileInfo(path string) (*fileInfo, error) {
@@ -428,4 +491,27 @@ func getUniqueSuffix(id string) (string, error) {
 	}
 
 	return id[p+1:], nil
+}
+
+func privateKeyFromFile(file string) (*ecdsa.PrivateKey, error) {
+	keyBytes, err := ioutil.ReadFile(filepath.Clean(file))
+	if err != nil {
+		return nil, err
+	}
+
+	return privateKeyFromPEM(keyBytes)
+}
+
+func privateKeyFromPEM(privateKeyPEM []byte) (*ecdsa.PrivateKey, error) {
+	privBlock, _ := pem.Decode(privateKeyPEM)
+	if privBlock == nil {
+		return nil, errPrivateKeyNotFoundInPEM
+	}
+
+	privKey, err := x509.ParseECPrivateKey(privBlock.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return privKey, nil
 }
