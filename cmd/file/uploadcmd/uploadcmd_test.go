@@ -115,12 +115,17 @@ func TestUploadCmd(t *testing.T) {
 	fileIdxDocBytes, err := json.Marshal(fileIdxDoc)
 	require.NoError(t, err)
 
+	didResolution := model.DIDResolution{DIDDocument: fileIdxDocBytes}
+
+	didResolutionBytes, err := json.Marshal(didResolution)
+	require.NoError(t, err)
+
 	transport := mocks.NewTransport().
 		WithGetResponse(
 			&http.Response{
 				StatusCode: http.StatusOK,
 				Header:     header,
-				Body:       mocks.NewResponseBody(fileIdxDocBytes),
+				Body:       mocks.NewResponseBody(didResolutionBytes),
 			},
 		).
 		WithPostResponse(

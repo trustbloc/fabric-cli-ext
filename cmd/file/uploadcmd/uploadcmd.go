@@ -353,7 +353,7 @@ func (c *command) getUpdateRequest(patchStr string) ([]byte, error) {
 	}
 
 	return helper.NewUpdateRequest(&helper.UpdateRequestInfo{
-		DidUniqueSuffix:       uniqueSuffix,
+		DidSuffix:             uniqueSuffix,
 		UpdateRevealValue:     []byte(c.fileIndexUpdatePWD),
 		NextUpdateRevealValue: []byte(c.fileIndexNextUpdatePWD),
 		Patch:                 updatePatch,
@@ -376,8 +376,19 @@ func (c *command) getFileIndex() (*model.FileIndex, error) {
 		return nil, errors.Errorf("error retrieving file index document [%s] status code %d: %s", c.fileIndexURL, resp.StatusCode, resp.ErrorMsg)
 	}
 
+	var r model.DIDResolution
+	if errUnmarshal := json.Unmarshal(resp.Payload, &r); errUnmarshal != nil {
+		return nil, fmt.Errorf("unmarshal data return from sidtree %w", errUnmarshal)
+	}
+
+	didDocBytes := resp.Payload
+	// check if data is did resolution
+	if len(r.DIDDocument) != 0 {
+		didDocBytes = r.DIDDocument
+	}
+
 	fileIdxDoc := &model.FileIndexDoc{}
-	err = json.Unmarshal(resp.Payload, fileIdxDoc)
+	err = json.Unmarshal(didDocBytes, fileIdxDoc)
 	if err != nil {
 		return nil, err
 	}

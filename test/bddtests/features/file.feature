@@ -51,7 +51,7 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
     Then we wait 10 seconds
 
     When an HTTP request is sent to "http://localhost:48326/file/${fileIdxID}"
-    Then the JSON path "id" of the response equals "${fileIdxID}"
+    Then the JSON path "didDocument.id" of the response equals "${fileIdxID}"
 
     # Upload a couple of files and add them to the file index document
     When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/arrays.schema.json;./fixtures/testdata/v1/geographical-location.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --pwd pwd1 --nextpwd pwd2 --signingkeyfile ./fixtures/testdata/keys/update/private.key --noprompt"

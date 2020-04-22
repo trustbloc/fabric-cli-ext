@@ -19,14 +19,12 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-
-	"github.com/hyperledger/fabric-cli/pkg/environment"
-
 	"github.com/trustbloc/sidetree-core-go/pkg/document"
 	"github.com/trustbloc/sidetree-core-go/pkg/jws"
 	"github.com/trustbloc/sidetree-core-go/pkg/restapi/helper"
 	"github.com/trustbloc/sidetree-core-go/pkg/util/pubkey"
 
+	"github.com/hyperledger/fabric-cli/pkg/environment"
 	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
 	"github.com/trustbloc/fabric-cli-ext/cmd/file/httpclient"
 	"github.com/trustbloc/fabric-cli-ext/cmd/file/model"
@@ -85,7 +83,7 @@ const (
 	sha2_256 = 18
 
 	publicKeyField    = "publicKey"
-	publicKeyTemplate = `[{"id":"%s","type":"JwsVerificationKey2020","usage":["ops"],"publicKeyJwk":%s}]`
+	publicKeyTemplate = `[{"id":"%s","type":"JwsVerificationKey2020","usage":["ops"],"jwk":%s}]`
 )
 
 var (
@@ -238,11 +236,31 @@ func (c *command) run() error {
 		return errors.Errorf("status code %d: %s", resp.StatusCode, resp.ErrorMsg)
 	}
 
-	if err := c.Fprint(string(resp.Payload)); err != nil {
+	didDocBytes, err := c.getDoc(resp.Payload)
+	if err != nil {
+		return err
+	}
+
+	if err := c.Fprint(string(didDocBytes)); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (c *command) getDoc(payload []byte) ([]byte, error) {
+	var r model.DIDResolution
+	if errUnmarshal := json.Unmarshal(payload, &r); errUnmarshal != nil {
+		return nil, fmt.Errorf("unmarshal data return from sidtree %w", errUnmarshal)
+	}
+
+	didDocBytes := payload
+	// check if data is did resolution
+	if len(r.DIDDocument) != 0 {
+		didDocBytes = r.DIDDocument
+	}
+
+	return didDocBytes, nil
 }
 
 func (c *command) newCreateRequest(content string) ([]byte, error) {
