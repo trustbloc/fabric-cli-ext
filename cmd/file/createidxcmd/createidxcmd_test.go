@@ -103,6 +103,11 @@ func TestCreateIDXCmd(t *testing.T) {
 	fileIndexBytes, err := json.Marshal(fileIdxDoc)
 	require.NoError(t, err)
 
+	didResolution := model.DIDResolution{DIDDocument: fileIndexBytes}
+
+	didResolutionBytes, err := json.Marshal(didResolution)
+	require.NoError(t, err)
+
 	args := []string{"--url", "http://localhost:80/file", "--path", "/content", "--recoverypwd", "pwd1", "--nextpwd", "pwd1", "--recoverykey", recoveryPublicKey, "--updatekey", updatePublicKey}
 	header := map[string][]string{"Content-Type": {"application/json"}}
 
@@ -110,7 +115,7 @@ func TestCreateIDXCmd(t *testing.T) {
 		&http.Response{
 			StatusCode: http.StatusOK,
 			Header:     header,
-			Body:       mocks.NewResponseBody(fileIndexBytes),
+			Body:       mocks.NewResponseBody(didResolutionBytes),
 		},
 	)
 
