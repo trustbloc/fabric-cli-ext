@@ -172,7 +172,16 @@ func (c *command) run() error {
 	return c.Fprintln(msgConfigUpdated)
 }
 
+type authConfig struct {
+	// ReadTokens contains a set of names of tokens for authorizing read requests
+	ReadTokens []string
+	// WriteTokens contains a set of names of tokens for authorizing write requests
+	WriteTokens []string
+}
+
 type fileHandlerConfig struct {
+	Authorization authConfig
+
 	BasePath       string
 	ChaincodeName  string
 	Collection     string

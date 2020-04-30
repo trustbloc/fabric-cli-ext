@@ -56,6 +56,9 @@ const (
 	pathFlag  = "path"
 	pathUsage = "The base path of the endpoint that will be indexed by this document. Example: --path /schema"
 
+	authTokenFlag  = "authtoken"
+	authTokenUsage = "The bearer authorization token that may be required to access some HTTP endpoints. Example: --authtoken mytoken" //nolint: gosec
+
 	recoveryPWDFlag  = "recoverypwd"
 	recoveryPWDUsage = "The password for recovery of the document. Example: --recoverypwd myrecoverypwd"
 
@@ -100,7 +103,7 @@ var (
 )
 
 type httpClient interface {
-	Post(url string, req []byte) (*httpclient.HTTPResponse, error)
+	Post(url string, req []byte, opts ...httpclient.RequestOpt) (*httpclient.HTTPResponse, error)
 }
 
 // New returns the file createidx sub-command
@@ -136,6 +139,7 @@ func newCmd(settings *environment.Settings, client httpClient) *cobra.Command {
 
 	cmd.Flags().StringVar(&c.url, urlFlag, "", urlUsage)
 	cmd.Flags().StringVar(&c.path, pathFlag, "", pathUsage)
+	cmd.Flags().StringVar(&c.authToken, authTokenFlag, "", authTokenUsage)
 	cmd.Flags().StringVar(&c.recoveryPWD, recoveryPWDFlag, "", recoveryPWDUsage)
 	cmd.Flags().StringVar(&c.recoveryKeyString, recoveryKeyFlag, "", recoveryKeyUsage)
 	cmd.Flags().StringVar(&c.recoveryKeyFile, recoveryKeyFileFlag, "", recoveryKeyFileUsage)
@@ -155,6 +159,7 @@ type command struct {
 	// Flags
 	url               string
 	path              string
+	authToken         string
 	recoveryPWD       string
 	nextUpdatePWD     string
 	noPrompt          bool
@@ -227,13 +232,9 @@ func (c *command) run() error {
 		}
 	}
 
-	resp, err := c.client.Post(c.url, req)
+	resp, err := c.post(req)
 	if err != nil {
 		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return errors.Errorf("status code %d: %s", resp.StatusCode, resp.ErrorMsg)
 	}
 
 	didDocBytes, err := c.getDoc(resp.Payload)
@@ -246,6 +247,28 @@ func (c *command) run() error {
 	}
 
 	return nil
+}
+
+func (c *command) post(data []byte) (*httpclient.HTTPResponse, error) {
+	var reqOpts []httpclient.RequestOpt
+	if c.authToken != "" {
+		reqOpts = append(reqOpts, httpclient.WithAuthToken(c.authToken))
+	}
+
+	resp, err := c.client.Post(c.url, data, reqOpts...)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusUnauthorized {
+			return nil, errors.Errorf("status code %d: %s - Did you provide an authorization token (--authtoken)?", resp.StatusCode, resp.ErrorMsg)
+		}
+
+		return nil, errors.Errorf("status code %d: %s", resp.StatusCode, resp.ErrorMsg)
+	}
+
+	return resp, nil
 }
 
 func (c *command) getDoc(payload []byte) ([]byte, error) {

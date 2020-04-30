@@ -69,6 +69,12 @@ const (
 	fileIndexURLFlag  = "idxurl"
 	fileIndexURLUsage = "The URL of the file index Sidetree document to be updated with the new/updated files. Example: --idxurl http://localhost:48326/file/file:idx:1234"
 
+	authTokenFlag  = "authtoken"
+	authTokenUsage = "The bearer authorization token that may be required to access the URL specified by --idxurl. Example: --authtoken mytoken" //nolint: gosec
+
+	contentAuthTokenFlag  = "contentauthtoken"
+	contentAuthTokenUsage = "The bearer authorization token to upload files to the URL specified by --url. This is only required if it is different from --authtoken. Example: --contentauthtoken mytoken" //nolint: gosec
+
 	fileIndexUpdatePWDFlag  = "pwd"
 	fileIndexUpdatePWDUsage = "The password required to update the file index Sidetree document. Example: --pwd pwd1"
 
@@ -109,8 +115,8 @@ var (
 )
 
 type httpClient interface {
-	Post(url string, req []byte) (*httpclient.HTTPResponse, error)
-	Get(url string) (*httpclient.HTTPResponse, error)
+	Post(url string, req []byte, opts ...httpclient.RequestOpt) (*httpclient.HTTPResponse, error)
+	Get(url string, opts ...httpclient.RequestOpt) (*httpclient.HTTPResponse, error)
 }
 
 // New returns the file upload sub-command
@@ -146,6 +152,8 @@ func newCmd(settings *environment.Settings, client httpClient) *cobra.Command {
 
 	cmd.Flags().StringVar(&c.file, fileFlag, "", fileUsage)
 	cmd.Flags().StringVar(&c.url, urlFlag, "", urlUsage)
+	cmd.Flags().StringVar(&c.authToken, authTokenFlag, "", authTokenUsage)
+	cmd.Flags().StringVar(&c.contentAuthToken, contentAuthTokenFlag, "", contentAuthTokenUsage)
 	cmd.Flags().StringVar(&c.fileIndexURL, fileIndexURLFlag, "", fileIndexURLUsage)
 	cmd.Flags().StringVar(&c.fileIndexUpdatePWD, fileIndexUpdatePWDFlag, "", fileIndexUpdatePWDUsage)
 	cmd.Flags().StringVar(&c.fileIndexNextUpdatePWD, fileIndexNextUpdatePWDFlag, "", fileIndexNextUpdatePWDUsage)
@@ -163,6 +171,8 @@ type command struct {
 
 	file                      string
 	url                       string
+	authToken                 string
+	contentAuthToken          string
 	basePath                  string
 	fileIndexURL              string
 	fileIndexBaseURL          string
@@ -174,6 +184,38 @@ type command struct {
 }
 
 func (c *command) validateAndProcessArgs() error {
+	if err := c.validateAndProcessURL(); err != nil {
+		return err
+	}
+
+	if err := c.validateAndProcessFileIdxURL(); err != nil {
+		return err
+	}
+
+	if c.file == "" {
+		return errFilesRequired
+	}
+
+	if c.fileIndexUpdatePWD == "" {
+		return errFileIndexUpdatePWDRequired
+	}
+
+	if c.fileIndexNextUpdatePWD == "" {
+		return errFileIndexNextUpdatePWDRequired
+	}
+
+	if err := c.validateSigningKey(); err != nil {
+		return err
+	}
+
+	if c.contentAuthToken == "" {
+		c.contentAuthToken = c.authToken
+	}
+
+	return nil
+}
+
+func (c *command) validateAndProcessURL() error {
 	if c.url == "" {
 		return errURLRequired
 	}
@@ -189,10 +231,10 @@ func (c *command) validateAndProcessArgs() error {
 
 	c.basePath = u.Path
 
-	if c.file == "" {
-		return errFilesRequired
-	}
+	return nil
+}
 
+func (c *command) validateAndProcessFileIdxURL() error {
 	if c.fileIndexURL == "" {
 		return errFileIndexURLRequired
 	}
@@ -200,18 +242,6 @@ func (c *command) validateAndProcessArgs() error {
 	pos := strings.LastIndex(c.fileIndexURL, "/")
 	if pos == -1 {
 		return errors.Errorf("invalid file index URL: [%s]", c.fileIndexURL)
-	}
-
-	if c.fileIndexUpdatePWD == "" {
-		return errFileIndexUpdatePWDRequired
-	}
-
-	if c.fileIndexNextUpdatePWD == "" {
-		return errFileIndexNextUpdatePWDRequired
-	}
-
-	if err := c.validateSigningKey(); err != nil {
-		return err
 	}
 
 	c.fileIndexBaseURL = c.fileIndexURL[0:pos]
@@ -242,7 +272,7 @@ func (c *command) run() error {
 	}
 
 	for _, file := range f {
-		id, e := c.upload(c.url, file.ContentType, file.Content)
+		id, e := c.upload(file.ContentType, file.Content)
 		if e != nil {
 			return e
 		}
@@ -270,7 +300,7 @@ func (c *command) confirmUpload(url string, files files) (bool, error) {
 	return strings.ToLower(c.Prompt()) == "y", nil
 }
 
-func (c *command) upload(url, contentType string, fileBytes []byte) (string, error) {
+func (c *command) upload(contentType string, fileBytes []byte) (string, error) {
 	req := &uploadFile{
 		ContentType: contentType,
 		Content:     fileBytes,
@@ -281,12 +311,21 @@ func (c *command) upload(url, contentType string, fileBytes []byte) (string, err
 		return "", err
 	}
 
-	resp, err := c.client.Post(url, reqBytes)
+	var reqOpts []httpclient.RequestOpt
+	if c.contentAuthToken != "" {
+		reqOpts = append(reqOpts, httpclient.WithAuthToken(c.contentAuthToken))
+	}
+
+	resp, err := c.client.Post(c.url, reqBytes, reqOpts...)
 	if err != nil {
 		return "", err
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusUnauthorized {
+			return "", errors.Errorf("status code %d: %s - Did you provide an authorization token (--contentauthtoken)?", resp.StatusCode, resp.ErrorMsg)
+		}
+
 		return "", errors.Errorf("status code %d: %s", resp.StatusCode, resp.ErrorMsg)
 	}
 
@@ -310,12 +349,21 @@ func (c *command) updateIndexFile(fileIdx *model.FileIndex, files files) error {
 		return err
 	}
 
-	resp, err := c.client.Post(c.fileIndexBaseURL, req)
+	var reqOpts []httpclient.RequestOpt
+	if c.authToken != "" {
+		reqOpts = append(reqOpts, httpclient.WithAuthToken(c.authToken))
+	}
+
+	resp, err := c.client.Post(c.fileIndexBaseURL, req, reqOpts...)
 	if err != nil {
 		return err
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusUnauthorized {
+			return errors.Errorf("error updating file index document. Status code %d: %s - Did you provide an authorization token (--authtoken)?", resp.StatusCode, resp.ErrorMsg)
+		}
+
 		return errors.Errorf("error updating file index document. Status code %d: %s", resp.StatusCode, resp.ErrorMsg)
 	}
 
@@ -363,7 +411,12 @@ func (c *command) getUpdateRequest(patchStr string) ([]byte, error) {
 }
 
 func (c *command) getFileIndex() (*model.FileIndex, error) {
-	resp, err := c.client.Get(c.fileIndexURL)
+	var reqOpts []httpclient.RequestOpt
+	if c.authToken != "" {
+		reqOpts = append(reqOpts, httpclient.WithAuthToken(c.authToken))
+	}
+
+	resp, err := c.client.Get(c.fileIndexURL, reqOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -371,6 +424,10 @@ func (c *command) getFileIndex() (*model.FileIndex, error) {
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusNotFound {
 			return nil, errors.Errorf("file index document [%s] not found", c.fileIndexURL)
+		}
+
+		if resp.StatusCode == http.StatusUnauthorized {
+			return nil, errors.Errorf("error retrieving file index document [%s]. Status code %d: %s - Did you provide an authorization token (--authtoken)?", c.fileIndexURL, resp.StatusCode, resp.ErrorMsg)
 		}
 
 		return nil, errors.Errorf("error retrieving file index document [%s] status code %d: %s", c.fileIndexURL, resp.StatusCode, resp.ErrorMsg)

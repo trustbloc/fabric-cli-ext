@@ -34,7 +34,7 @@ func TestClient(t *testing.T) {
 		c := New(WithTransport(transport))
 		require.NotNil(t, c)
 
-		resp, err := c.Get("http://localhost:80")
+		resp, err := c.Get("http://localhost:80", WithAuthToken("mytoken"))
 		require.NoError(t, err)
 		require.Equal(t, respData, resp.Payload)
 	})
@@ -52,7 +52,7 @@ func TestClient(t *testing.T) {
 		c := New(WithTransport(transport))
 		require.NotNil(t, c)
 
-		resp, err := c.Post("http://localhost:80", reqData)
+		resp, err := c.Post("http://localhost:80", reqData, WithAuthToken("mytoken"))
 		require.NoError(t, err)
 		require.Equal(t, respData, resp.Payload)
 	})

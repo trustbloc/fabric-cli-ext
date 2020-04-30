@@ -10,7 +10,7 @@ import "encoding/json"
 
 const (
 	// UpdateKeyID is the ID of the public key within the document that is used for signature verification of updates
-	UpdateKeyID = "#updatePublicKey"
+	UpdateKeyID = "updatePublicKey"
 )
 
 // FileIndexDoc contains a file index document

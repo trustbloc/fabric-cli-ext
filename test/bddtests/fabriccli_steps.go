@@ -7,9 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package bddtests
 
 import (
-	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"strings"
 
@@ -92,45 +89,6 @@ func (d *FabricCLISteps) execute(strArgs string) error {
 	return nil
 }
 
-func (d *FabricCLISteps) httpGet(url string) error {
-	bddtests.ClearResponse()
-
-	resolved, err := bddtests.ResolveVars(url)
-	if err != nil {
-		return err
-	}
-
-	url = resolved.(string)
-
-	client := &http.Client{}
-
-	resp, err := client.Get(url)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return errors.Errorf("received status code %d", resp.StatusCode)
-	}
-
-	contentType, ok := resp.Header["Content-Type"]
-	if ok && strings.HasPrefix(contentType[0], "image") {
-		logger.Infof("... got HTTP image of type [%s]", contentType)
-		return nil
-	}
-
-	payload, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("reading response body failed: %s", err)
-	}
-
-	logger.Infof("... got HTTP response of type [%s]:\n%s", contentType[0], payload)
-
-	bddtests.SetResponse(string(payload))
-
-	return nil
-}
-
 // RegisterSteps registers transient data steps
 func (d *FabricCLISteps) RegisterSteps(s *godog.Suite) {
 	s.BeforeScenario(d.BDDContext.BeforeScenario)
@@ -140,5 +98,4 @@ func (d *FabricCLISteps) RegisterSteps(s *godog.Suite) {
 	s.Step(`^fabric-cli context "([^"]*)" is defined on channel "([^"]*)" with org "([^"]*)", peers "([^"]*)" and user "([^"]*)"$`, d.defineContext)
 	s.Step(`^fabric-cli context "([^"]*)" is used$`, d.useContext)
 	s.Step(`^fabric-cli is executed with args "([^"]*)"$`, d.execute)
-	s.Step(`^an HTTP request is sent to "([^"]*)"$`, d.httpGet)
 }
