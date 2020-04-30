@@ -13,6 +13,11 @@ import (
 	"net/http"
 )
 
+const (
+	authHeader  = "Authorization"
+	tokenPrefix = "Bearer "
+)
+
 // HTTPResponse contains an HTTP response
 type HTTPResponse struct {
 	StatusCode  int
@@ -49,18 +54,32 @@ func New(opts ...Opt) *Client {
 	return c
 }
 
+type requestOptions struct {
+	authToken string
+}
+
+// RequestOpt sets a request option
+type RequestOpt func(opts *requestOptions)
+
+// WithAuthToken sets an authorization token in the header
+func WithAuthToken(token string) RequestOpt {
+	return func(opts *requestOptions) {
+		opts.authToken = token
+	}
+}
+
 // Post posts an HTTP request
-func (c *Client) Post(url string, req []byte) (*HTTPResponse, error) {
-	resp, err := c.send(url, req)
+func (c *Client) Post(url string, req []byte, opts ...RequestOpt) (*HTTPResponse, error) {
+	resp, err := c.put(url, req, opts)
 	if err != nil {
 		return nil, err
 	}
 	return c.handle(resp)
 }
 
-// Get send an HTTP GET request
-func (c *Client) Get(url string) (*HTTPResponse, error) {
-	resp, err := c.client.Get(url)
+// Get put an HTTP GET request
+func (c *Client) Get(url string, opts ...RequestOpt) (*HTTPResponse, error) {
+	resp, err := c.get(url, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +112,22 @@ func (c *Client) handle(resp *http.Response) (*HTTPResponse, error) {
 	}, nil
 }
 
-func (c *Client) send(url string, req []byte) (*http.Response, error) {
+func (c *Client) get(url string, opts []RequestOpt) (*http.Response, error) {
+	httpReq, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	options := resolveRequestOptions(opts)
+
+	if options.authToken != "" {
+		httpReq.Header.Set(authHeader, tokenPrefix+options.authToken)
+	}
+
+	return c.client.Do(httpReq)
+}
+
+func (c *Client) put(url string, req []byte, opts []RequestOpt) (*http.Response, error) {
 	httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(req))
 	if err != nil {
 		return nil, err
@@ -101,5 +135,21 @@ func (c *Client) send(url string, req []byte) (*http.Response, error) {
 
 	httpReq.Header.Set("Content-Type", "application/json")
 
+	options := resolveRequestOptions(opts)
+
+	if options.authToken != "" {
+		httpReq.Header.Set(authHeader, tokenPrefix+options.authToken)
+	}
+
 	return c.client.Do(httpReq)
+}
+
+func resolveRequestOptions(opts []RequestOpt) *requestOptions {
+	options := &requestOptions{}
+
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	return options
 }

@@ -36,12 +36,16 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
     And fabric-cli is executed with args "ledgerconfig update --configfile ./fixtures/config/fabric/org1-config.json --noprompt"
     And fabric-cli is executed with args "ledgerconfig update --configfile ./fixtures/config/fabric/org2-config.json --noprompt"
 
+    Given variable "token_content_w" is assigned the value "TOKEN_CONTENT_W"
+    And variable "token_fileidx_r" is assigned the value "TOKEN_FILEIDX_R"
+    And variable "token_fileidx_w" is assigned the value "TOKEN_FILEIDX_W"
+
     Then we wait 10 seconds
 
   @sidetree_file_s1
   Scenario: Test the file command
     # Create a file index document
-    When fabric-cli is executed with args "file createidx --path /content --url http://localhost:48326/file --recoverypwd pwd1 --nextpwd pwd1 --recoverykeyfile ./fixtures/testdata/keys/recover/public.key --updatekeyfile ./fixtures/testdata/keys/update/public.key --noprompt"
+    When fabric-cli is executed with args "file createidx --path /content --url http://localhost:48326/file --recoverypwd pwd1 --nextpwd pwd1 --recoverykeyfile ./fixtures/testdata/keys/recover/public.key --updatekeyfile ./fixtures/testdata/keys/update/public.key --authtoken ${token_fileidx_w} --noprompt"
     And the JSON path "id" of the response is saved to variable "fileIdxID"
 
     # Update the file handler configuration for the '/content' path with the ID of the file index document
@@ -50,11 +54,14 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
 
     Then we wait 10 seconds
 
-    When an HTTP request is sent to "http://localhost:48326/file/${fileIdxID}"
+    Given the authorization bearer token for "GET" requests to path "/file" is set to "${token_fileidx_r}"
+    When an HTTP GET is sent to "http://localhost:48326/file/${fileIdxID}"
     Then the JSON path "didDocument.id" of the response equals "${fileIdxID}"
 
     # Upload a couple of files and add them to the file index document
-    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/arrays.schema.json;./fixtures/testdata/v1/geographical-location.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --pwd pwd1 --nextpwd pwd2 --signingkeyfile ./fixtures/testdata/keys/update/private.key --noprompt"
+    # NOTE: Use an explicit --contentauthtoken to test the case where the auth token for /file and /content are different. Otherwise,
+    # if they're the same, we don't need to specify --contentauthtoken.
+    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/arrays.schema.json;./fixtures/testdata/v1/geographical-location.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --pwd pwd1 --nextpwd pwd2 --signingkeyfile ./fixtures/testdata/keys/update/private.key --authtoken ${token_fileidx_w} --contentauthtoken ${token_content_w} --noprompt"
     Then the JSON path "#" of the response has 2 items
     And the JSON path "0.Name" of the response equals "arrays.schema.json"
     And the JSON path "0.ContentType" of the response equals "application/json"
@@ -63,32 +70,30 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
 
     Then we wait 10 seconds
 
-    When an HTTP request is sent to "http://localhost:48326/content/arrays.schema.json"
+    When an HTTP GET is sent to "http://localhost:48326/content/arrays.schema.json"
     Then the JSON path "$id" of the response equals "https://example.com/arrays.schema.json"
 
-    When an HTTP request is sent to "http://localhost:48426/content/arrays.schema.json"
+    When an HTTP GET is sent to "http://localhost:48526/content/arrays.schema.json"
     Then the JSON path "$id" of the response equals "https://example.com/arrays.schema.json"
 
-    When an HTTP request is sent to "http://localhost:48526/content/arrays.schema.json"
+    When an HTTP GET is sent to "http://localhost:48626/content/arrays.schema.json"
     Then the JSON path "$id" of the response equals "https://example.com/arrays.schema.json"
 
-    When an HTTP request is sent to "http://localhost:48626/content/arrays.schema.json"
-    Then the JSON path "$id" of the response equals "https://example.com/arrays.schema.json"
-
-    When an HTTP request is sent to "http://localhost:48326/content/geographical-location.schema.json"
+    When an HTTP GET is sent to "http://localhost:48326/content/geographical-location.schema.json"
     Then the JSON path "$id" of the response equals "https://example.com/geographical-location.schema.json"
 
-    When an HTTP request is sent to "http://localhost:48426/content/geographical-location.schema.json"
+    When an HTTP GET is sent to "http://localhost:48426/content/geographical-location.schema.json"
     Then the JSON path "$id" of the response equals "https://example.com/geographical-location.schema.json"
 
-    When an HTTP request is sent to "http://localhost:48526/content/geographical-location.schema.json"
+    When an HTTP GET is sent to "http://localhost:48526/content/geographical-location.schema.json"
     Then the JSON path "$id" of the response equals "https://example.com/geographical-location.schema.json"
 
-    When an HTTP request is sent to "http://localhost:48626/content/geographical-location.schema.json"
+    When an HTTP GET is sent to "http://localhost:48626/content/geographical-location.schema.json"
     Then the JSON path "$id" of the response equals "https://example.com/geographical-location.schema.json"
 
     # Upload more files and add them to the file index document. Note that arrays.schema.json is updated to v2
-    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/person.schema.json;./fixtures/testdata/v1/raised-hand.png;./fixtures/testdata/v1/text1.txt;./fixtures/testdata/v2/arrays.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --pwd pwd2 --nextpwd pwd3 --signingkeyfile ./fixtures/testdata/keys/update/private.key --noprompt"
+    # NOTE: Don't use an explicit --contentauthtoken to test the case where the auth token for /file and /content are the same
+    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/person.schema.json;./fixtures/testdata/v1/raised-hand.png;./fixtures/testdata/v1/text1.txt;./fixtures/testdata/v2/arrays.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --pwd pwd2 --nextpwd pwd3 --signingkeyfile ./fixtures/testdata/keys/update/private.key --authtoken ${token_fileidx_w} --noprompt"
     Then the JSON path "#" of the response has 4 items
     And the JSON path "0.Name" of the response equals "person.schema.json"
     And the JSON path "0.ContentType" of the response equals "application/json"
@@ -101,14 +106,14 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
 
     Then we wait 10 seconds
 
-    When an HTTP request is sent to "http://localhost:48326/content/person.schema.json"
+    When an HTTP GET is sent to "http://localhost:48326/content/person.schema.json"
     Then the JSON path "$id" of the response equals "https://example.com/person.schema.json"
-    When an HTTP request is sent to "http://localhost:48426/content/raised-hand.png"
-    When an HTTP request is sent to "http://localhost:48526/content/text1.txt"
+    When an HTTP GET is sent to "http://localhost:48426/content/raised-hand.png"
+    When an HTTP GET is sent to "http://localhost:48526/content/text1.txt"
 
     # Ensure that the original files can still be accessed
-    When an HTTP request is sent to "http://localhost:48526/content/geographical-location.schema.json"
+    When an HTTP GET is sent to "http://localhost:48526/content/geographical-location.schema.json"
     Then the JSON path "$id" of the response equals "https://example.com/geographical-location.schema.json"
 
-    When an HTTP request is sent to "http://localhost:48626/content/arrays.schema.json"
+    When an HTTP GET is sent to "http://localhost:48626/content/arrays.schema.json"
     Then the JSON path "$id" of the response equals "https://example.com/arrays.schema.v2.json"

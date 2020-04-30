@@ -67,10 +67,67 @@ defineSupportCode(function ({And, But, Given, Then, When}) {
     Then(/^the JSON path "([^"]*)" of the response equals "([^"]*)"$/, function (arg1, arg2, callback) {
         callback.pending();
     });
+    Then(/^the JSON path "([^"]*)" of the numeric response equals "([^"]*)"$/, function (arg1, arg2, callback) {
+        callback.pending();
+    });
+    Then(/^the JSON path "([^"]*)" of the boolean response equals "([^"]*)"$/, function (arg1, arg2, callback) {
+        callback.pending();
+    });
     Then(/^the JSON path "([^"]*)" of the response contains "([^"]*)"$/, function (arg1, arg2, callback) {
         callback.pending();
     });
     Then(/^the JSON path "([^"]*)" of the response is saved to variable "([^"]*)"$/, function (arg1, arg2, callback) {
+        callback.pending();
+    });
+    Then(/^the JSON path "([^"]*)" of the numeric response is saved to variable "([^"]*)"$/, function (arg1, arg2, callback) {
+        callback.pending();
+    });
+    Then(/^the JSON path "([^"]*)" of the boolean response is saved to variable "([^"]*)"$/, function (arg1, arg2, callback) {
+        callback.pending();
+    });
+    Then(/^the JSON path "([^"]*)" of the raw response is saved to variable "([^"]*)"$/, function (arg1, arg2, callback) {
+        callback.pending();
+    });
+    Then(/^the JSON path "([^"]*)" of the response is not empty$/, function (arg1, callback) {
+        callback.pending();
+    });
+    Then(/^the JSON path "([^"]*)" of the array response is not empty$/, function (arg1, callback) {
+        callback.pending();
+    });
+    And(/^an HTTP GET is sent to "([^"]*)"$/, function (arg1, callback) {
+        callback.pending();
+    });
+    And(/^an HTTP GET is sent to "([^"]*)" and the returned status code is (\d+)$/, function (arg1, arg2, callback) {
+        callback.pending();
+    });
+    And(/^an HTTP POST is sent to "([^"]*)" with content from file "([^"]*)"$/, function (arg1, arg2, callback) {
+        callback.pending();
+    });
+    And(/^an HTTP POST is sent to "([^"]*)" with content from file "([^"]*)" and the returned status code is (\d+)$/, function (arg1, arg2, arg3, callback) {
+        callback.pending();
+    });
+    And(/^an HTTP POST is sent to "([^"]*)" with content "([^"]*)" of type "([^"]*)"$/, function (arg1, arg2, arg3, callback) {
+        callback.pending();
+    });
+    And(/^an HTTP POST is sent to "([^"]*)" with content "([^"]*)" of type "([^"]*)" and the returned status code is (\d+)$/, function (arg1, arg2, arg3, arg4, callback) {
+        callback.pending();
+    });
+    Then(/^the response equals "([^"]*)"$/, function (arg1, callback) {
+        callback.pending();
+    });
+    And(/^the base64-encoded value "([^"]*)" is converted to base64URL-encoding and saved to variable "([^"]*)"$/, function (arg1, arg2, callback) {
+        callback.pending();
+    });
+    And(/^the base64-encoded value "([^"]*)" is decoded and saved to variable "([^"]*)"$/, function (arg1, arg2, callback) {
+        callback.pending();
+    });
+    And(/^the value "([^"]*)" equals "([^"]*)"$/, function (arg1, arg2, callback) {
+        callback.pending();
+    });
+    And(/^variable "([^"]*)" is assigned the value "([^"]*)"$/, function (arg1, arg2, callback) {
+        callback.pending();
+    });
+    And(/^the authorization bearer token for "([^"]*)" requests to path "([^"]*)" is set to "([^"]*)"$/, function (arg1, arg2, callback) {
         callback.pending();
     });
 });

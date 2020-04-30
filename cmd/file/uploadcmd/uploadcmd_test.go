@@ -61,12 +61,12 @@ func TestUloadCmd_InvalidOptions(t *testing.T) {
 		require.Contains(t, err.Error(), "invalid URL")
 	})
 
-	t.Run("No --files", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url).Execute(), errFilesRequired.Error())
-	})
-
 	t.Run("No --idxurl", func(t *testing.T) {
 		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files).Execute(), errFileIndexURLRequired.Error())
+	})
+
+	t.Run("No --files", func(t *testing.T) {
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, idxUrlFlag, idxUrl).Execute(), errFilesRequired.Error())
 	})
 
 	t.Run("Invalid --idxurl", func(t *testing.T) {
@@ -102,7 +102,7 @@ func TestUploadCmd(t *testing.T) {
 	)
 
 	var (
-		args   = []string{"--url", url, "--files", files, "--idxurl", idxUrl, "--pwd", "pwd1", "--nextpwd", "pwd2", "--signingkey", signingKey}
+		args   = []string{"--url", url, "--files", files, "--idxurl", idxUrl, "--pwd", "pwd1", "--nextpwd", "pwd2", "--signingkey", signingKey, "--authtoken", "mytoken", "--contentauthtoken", "mytoken"}
 		header = map[string][]string{"Content-Type": {"application/json"}}
 	)
 
@@ -264,6 +264,21 @@ func TestUploadCmd(t *testing.T) {
 		err := c.Execute()
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "not found")
+	})
+
+	t.Run("Unuathorized", func(t *testing.T) {
+		transport := mocks.NewTransport().WithGetResponse(
+			&http.Response{
+				StatusCode: http.StatusUnauthorized,
+				Header:     header,
+				Body:       mocks.NewResponseBody([]byte("Unauthorized")),
+			},
+		)
+
+		c := newMockCmd(t, transport, append(args, "--noprompt")...)
+		err := c.Execute()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "Unauthorized")
 	})
 
 	t.Run("With invalid base path", func(t *testing.T) {

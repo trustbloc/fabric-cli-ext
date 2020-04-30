@@ -108,7 +108,7 @@ func TestCreateIDXCmd(t *testing.T) {
 	didResolutionBytes, err := json.Marshal(didResolution)
 	require.NoError(t, err)
 
-	args := []string{"--url", "http://localhost:80/file", "--path", "/content", "--recoverypwd", "pwd1", "--nextpwd", "pwd1", "--recoverykey", recoveryPublicKey, "--updatekey", updatePublicKey}
+	args := []string{"--url", "http://localhost:80/file", "--path", "/content", "--recoverypwd", "pwd1", "--nextpwd", "pwd1", "--recoverykey", recoveryPublicKey, "--updatekey", updatePublicKey, "--authtoken", "mytoken"}
 	header := map[string][]string{"Content-Type": {"application/json"}}
 
 	transport := mocks.NewTransport().WithPostResponse(
