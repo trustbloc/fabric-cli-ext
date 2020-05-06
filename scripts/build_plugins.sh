@@ -24,7 +24,7 @@ if [ ${envOS} = 'Darwin' ]; then
 replace github.com/hyperledger/fabric-sdk-go => github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20200222173625-ff3bdd738791
 ' go.mod
 /usr/bin/sed -i '' '$a\
-replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.2
+replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.3
 ' go.mod
 /usr/bin/sed -i '' '$a\
 replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678
@@ -43,7 +43,7 @@ replace github.com/stretchr/testify => github.com/stretchr/testify v1.4.0
 ' go.mod
 else
 sed  -e "\$areplace github.com/hyperledger/fabric-sdk-go => github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20200222173625-ff3bdd738791" -i go.mod
-sed  -e "\$areplace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.2" -i go.mod
+sed  -e "\$areplace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.3" -i go.mod
 sed  -e "\$areplace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678" -i go.mod
 sed  -e "\$areplace golang.org/x/sys => golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5" -i go.mod
 sed  -e "\$areplace gopkg.in/check.v1 => gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127" -i go.mod
