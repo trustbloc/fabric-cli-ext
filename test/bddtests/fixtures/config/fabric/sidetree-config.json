@@ -2,16 +2,5 @@
   "Monitor": {
     "Period": "3s",
     "MetaDataChaincodeName": "document"
-  },
-  "Namespaces": [
-    {
-      "DocType": "FILE_INDEX",
-      "Namespace": "file:idx",
-      "BasePath": "/file",
-      "Authorization":{
-        "ReadTokens": ["fileidx_r","fileidx_w"],
-        "WriteTokens": ["fileidx_w"]
-      }
-    }
-  ]
+  }
 }
