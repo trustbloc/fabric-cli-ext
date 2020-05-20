@@ -5,7 +5,7 @@
 module github.com/trustbloc/fabric-cli-ext
 
 require (
-	github.com/hyperledger/fabric-cli v0.0.0-20191215205855-97c039341083
+	github.com/hyperledger/fabric-cli v0.0.0-20200520152702-fe576fa62768
 	github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20200222173625-ff3bdd738791
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v0.0.4

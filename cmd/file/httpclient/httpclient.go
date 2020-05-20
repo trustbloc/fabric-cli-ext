@@ -87,6 +87,12 @@ func (c *Client) Get(url string, opts ...RequestOpt) (*HTTPResponse, error) {
 }
 
 func (c *Client) handle(resp *http.Response) (*HTTPResponse, error) {
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Error closing HTTP response: %s", err)
+		}
+	}()
+
 	gotBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("reading response body failed: %s", err)
