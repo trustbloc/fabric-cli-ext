@@ -19,6 +19,7 @@ import (
 
 //go:generate counterfeiter -o ../mocks/channel.gen.go --fake-name Channel github.com/hyperledger/fabric-cli/pkg/fabric.Channel
 //go:generate counterfeiter -o ../mocks/factory.gen.go --fake-name Factory github.com/hyperledger/fabric-cli/pkg/fabric.Factory
+//go:generate counterfeiter -o ../mocks/resmgmt.gen.go --fake-name ResMgmt github.com/hyperledger/fabric-cli/pkg/fabric.ResourceManagement
 
 func TestBaseCommand_Channel(t *testing.T) {
 	t.Run("With factory error", func(t *testing.T) {
@@ -47,6 +48,40 @@ func TestBaseCommand_Channel(t *testing.T) {
 		p := func(config *environment.Config) (fabric.Factory, error) { return factory, nil }
 		c := newMockCmd(t, p)
 		ch, err := c.Channel()
+		require.NoError(t, err)
+		require.NotNil(t, ch)
+	})
+}
+
+func TestBaseCommand_ResMgmt(t *testing.T) {
+	t.Run("With factory error", func(t *testing.T) {
+		errExpected := errors.New("factory error")
+		p := func(config *environment.Config) (fabric.Factory, error) { return nil, errExpected }
+		c := newMockCmd(t, p)
+		ch, err := c.ResMgmt()
+		require.EqualError(t, err, errExpected.Error())
+		require.Nil(t, ch)
+	})
+
+	t.Run("With ResourceManagement error", func(t *testing.T) {
+		errExpected := errors.New("resource management error")
+		factory := &mocks.Factory{}
+		factory.ResourceManagementReturns(nil, errExpected)
+
+		p := func(config *environment.Config) (fabric.Factory, error) { return factory, nil }
+		c := newMockCmd(t, p)
+		ch, err := c.ResMgmt()
+		require.EqualError(t, err, errExpected.Error())
+		require.Nil(t, ch)
+	})
+
+	t.Run("Success", func(t *testing.T) {
+		factory := &mocks.Factory{}
+		factory.ResourceManagementReturns(&mocks.ResMgmt{}, nil)
+
+		p := func(config *environment.Config) (fabric.Factory, error) { return factory, nil }
+		c := newMockCmd(t, p)
+		ch, err := c.ResMgmt()
 		require.NoError(t, err)
 		require.NotNil(t, ch)
 	})

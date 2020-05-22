@@ -49,6 +49,16 @@ func (c *Command) Channel() (fabric.Channel, error) {
 	return factory.Channel()
 }
 
+// ResMgmt returns a new SDK resource manager
+func (c *Command) ResMgmt() (fabric.ResourceManagement, error) {
+	factory, err := c.FactoryProvider(c.Settings.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	return factory.ResourceManagement()
+}
+
 // Context returns the current context
 func (c *Command) Context() *environment.Context {
 	return c.Settings.Config.Contexts[c.Settings.Config.CurrentContext]

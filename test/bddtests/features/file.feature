@@ -13,23 +13,31 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
 
     Then we wait 10 seconds
 
-    Given DCAS collection config "dcas-cfg" is defined for collection "dcas" as policy="OR('Org1MSP.member','Org2MSP.member')", requiredPeerCount=1, maxPeerCount=2, and timeToLive=
-    Given off-ledger collection config "fileidx-cfg" is defined for collection "fileidxdoc" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=0, and timeToLive=
-    Given off-ledger collection config "meta-data-cfg" is defined for collection "meta_data" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=0, and timeToLive=
-    Given DCAS collection config "consortium-files-cfg" is defined for collection "consortium" as policy="OR('Org1MSP.member','Org2MSP.member')", requiredPeerCount=1, maxPeerCount=2, and timeToLive=
-
-    Then "system" chaincode "configscc" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "AND('Org1MSP.member','Org2MSP.member')" with collection policy ""
-    And "system" chaincode "sidetreetxn" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "AND('Org1MSP.member','Org2MSP.member')" with collection policy "dcas-cfg"
-    And "system" chaincode "document" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "OR('Org1MSP.member','Org2MSP.member')" with collection policy "fileidx-cfg,meta-data-cfg"
-    And "system" chaincode "file" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "OR('Org1MSP.member','Org2MSP.member')" with collection policy "consortium-files-cfg"
-
-    Then we wait 10 seconds
-
     Given fabric-cli network is initialized
     And fabric-cli plugin "../../.build/ledgerconfig" is installed
     And fabric-cli plugin "../../.build/file" is installed
+    And fabric-cli plugin "../../.build/extensions" is installed
+    And fabric-cli context "org1-admin-context" is defined on channel "mychannel" with org "peerorg1", peers "peer0.org1.example.com,peer1.org1.example.com" and user "Admin"
     And fabric-cli context "org1-context" is defined on channel "mychannel" with org "peerorg1", peers "peer0.org1.example.com,peer1.org1.example.com" and user "User1"
     And fabric-cli context "org2-context" is defined on channel "mychannel" with org "peerorg2", peers "peer0.org2.example.com,peer1.org2.example.com" and user "User1"
+
+    Given fabric-cli context "org1-admin-context" is used
+
+    Given variable "both-orgs-policy" is assigned the value "AND('Org1MSP.member','Org2MSP.member')"
+    And variable "single-org-policy" is assigned the value "OR('Org1MSP.member','Org2MSP.member')"
+    And variable "implicit-org-policy" is assigned the value "OR('IMPLICIT-ORG.member')"
+
+    Given variable "sidetreetxn-coll-cfg" is assigned the JSON value '{"name":"dcas","type":"COL_DCAS","policy":"${single-org-policy}","requiredPeerCount":1,"maxPeerCount":2,"timeToLive":"10m"}'
+    Given variable "metadata-coll-cfg" is assigned the JSON value '{"name":"meta_data","type":"COL_OFFLEDGER","policy":"${implicit-org-policy}","requiredPeerCount":0,"maxPeerCount":0,"timeToLive":""}'
+    Given variable "fileidxdoc-coll-cfg" is assigned the JSON value '{"name":"fileidxdoc","type":"COL_OFFLEDGER","policy":"${implicit-org-policy}","requiredPeerCount":0,"maxPeerCount":0,"timeToLive":""}'
+    Given variable "consortium-coll-cfg" is assigned the JSON value '{"name":"consortium","type":"COL_DCAS","policy":"${single-org-policy}","requiredPeerCount":1,"maxPeerCount":2,"timeToLive":""}'
+
+    Then fabric-cli is executed with args "extensions instantiatecc configscc v1 --policy ${both-orgs-policy}" ignoring error ".*chaincode with name '.*' already exists.*"
+    And fabric-cli is executed with args "extensions instantiatecc sidetreetxn v1 --policy ${both-orgs-policy} --collections-config [${sidetreetxn-coll-cfg}]" ignoring error ".*chaincode with name '.*' already exists.*"
+    And fabric-cli is executed with args "extensions instantiatecc document v1 --policy ${single-org-policy} --collections-config [${fileidxdoc-coll-cfg},${metadata-coll-cfg}]" ignoring error ".*chaincode with name '.*' already exists.*"
+    And fabric-cli is executed with args "extensions instantiatecc file v1 --policy ${single-org-policy} --collections-config [${consortium-coll-cfg}]" ignoring error ".*chaincode with name '.*' already exists.*"
+
+    Then we wait 10 seconds
 
     Given fabric-cli context "org1-context" is used
     Then fabric-cli is executed with args "ledgerconfig update --configfile ./fixtures/config/fabric/consortium-config.json --noprompt"

@@ -8,6 +8,7 @@ package bddtests
 
 import (
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/cucumber/godog"
@@ -71,13 +72,16 @@ func (d *FabricCLISteps) useContext(name string) error {
 	return err
 }
 
-func (d *FabricCLISteps) execute(strArgs string) error {
+func (d *FabricCLISteps) execute(expr string) error {
 	bddtests.ClearResponse()
 
-	args, err := bddtests.ResolveAllVars(strings.Replace(strArgs, " ", ",", -1))
+	strArgs, err := bddtests.ResolveVarsInExpression(expr)
 	if err != nil {
 		return err
 	}
+
+	args := strings.Split(strArgs, " ")
+
 	logger.Infof("Executing fabric-cli with args: %s ...", args)
 	response, err := NewFabricCLI().Exec(args...)
 	if err != nil {
@@ -89,6 +93,22 @@ func (d *FabricCLISteps) execute(strArgs string) error {
 	return nil
 }
 
+func (d *FabricCLISteps) executeIgnoreError(expr, ignoreErrRegExpr string) error {
+	err := d.execute(expr)
+	if err != nil {
+		ok, e := regexp.MatchString(ignoreErrRegExpr, err.Error())
+		if e != nil {
+			return e
+		}
+
+		if ok {
+			return nil
+		}
+	}
+
+	return err
+}
+
 // RegisterSteps registers transient data steps
 func (d *FabricCLISteps) RegisterSteps(s *godog.Suite) {
 	s.BeforeScenario(d.BDDContext.BeforeScenario)
@@ -98,4 +118,5 @@ func (d *FabricCLISteps) RegisterSteps(s *godog.Suite) {
 	s.Step(`^fabric-cli context "([^"]*)" is defined on channel "([^"]*)" with org "([^"]*)", peers "([^"]*)" and user "([^"]*)"$`, d.defineContext)
 	s.Step(`^fabric-cli context "([^"]*)" is used$`, d.useContext)
 	s.Step(`^fabric-cli is executed with args "([^"]*)"$`, d.execute)
+	s.Step(`^fabric-cli is executed with args "([^"]*)" ignoring error "([^"]*)"$`, d.executeIgnoreError)
 }
