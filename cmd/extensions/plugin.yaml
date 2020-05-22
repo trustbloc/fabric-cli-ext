@@ -1,0 +1,8 @@
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: extensions
+usage: extensions
+description: Provides extended functionality to work with fabric-peer-ext
+command: ${FABRIC_HOME}/plugins/extensions/extensions.so

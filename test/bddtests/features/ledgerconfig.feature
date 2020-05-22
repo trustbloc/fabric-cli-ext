@@ -10,11 +10,20 @@ Feature: ledger-config
 
   Background: Setup
     Given the channel "mychannel" is created and all peers have joined
-    And "test" chaincode "configscc" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "AND('Org1MSP.member','Org2MSP.member')" with collection policy ""
-    And fabric-cli network is initialized
+
+    Then we wait 10 seconds
+
+    Given fabric-cli network is initialized
     And fabric-cli plugin "../../.build/ledgerconfig" is installed
+    And fabric-cli plugin "../../.build/extensions" is installed
+    And fabric-cli context "org1-admin-context" is defined on channel "mychannel" with org "peerorg1", peers "peer0.org1.example.com,peer1.org1.example.com" and user "Admin"
     And fabric-cli context "org1-context" is defined on channel "mychannel" with org "peerorg1", peers "peer0.org1.example.com,peer1.org1.example.com" and user "User1"
     And fabric-cli context "org2-context" is defined on channel "mychannel" with org "peerorg2", peers "peer0.org2.example.com,peer1.org2.example.com" and user "User1"
+
+    Given fabric-cli context "org1-admin-context" is used
+    Then fabric-cli is executed with args "extensions instantiatecc configscc v1 --policy AND('Org1MSP.member','Org2MSP.member')" ignoring error ".*chaincode with name '.*' already exists.*"
+
+    Then we wait 10 seconds
 
   @ledgerconfig_s1
   Scenario: Test the ledgerconfig sub-commands: update, query, and delete

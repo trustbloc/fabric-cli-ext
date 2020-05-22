@@ -107,7 +107,6 @@ func FeatureContext(s *godog.Suite) {
 	// Note: Each test after NewcommonSteps. should add unique steps only
 	bddtests.NewCommonSteps(context).RegisterSteps(s)
 	NewFabricCLISteps(context).RegisterSteps(s)
-	NewOffLedgerSteps(context).RegisterSteps(s)
 }
 
 func initBDDConfig() {

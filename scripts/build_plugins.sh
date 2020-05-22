@@ -81,6 +81,9 @@ cp ./cmd/ledgerconfig/plugin.yaml ../ledgerconfig/
 # file
 go build -buildmode=plugin -o ../file/file.so ./cmd/file/file.go
 cp ./cmd/file/plugin.yaml ../file/
+# extensions
+go build -buildmode=plugin -o ../extensions/extensions.so ./cmd/extensions/extensions.go
+cp ./cmd/extensions/plugin.yaml ../extensions/
 
 cd ..
 rm -rf ./fabric-cli
