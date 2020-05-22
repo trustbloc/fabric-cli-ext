@@ -41,7 +41,7 @@ services:
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
-      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-monitor
+      - CORE_LEDGER_ROLES=committer,sidetree-resolver,sidetree-batch-writer,sidetree-observer-standby
     ports:
       - 7051:7051
       - 48326:48326
@@ -63,7 +63,7 @@ services:
       - CORE_PEER_ADDRESS=peer1.org1.example.com:7051
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.example.com:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org1.example.com:7051
-      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-observer
+      - CORE_LEDGER_ROLES=endorser,sidetree-resolver,sidetree-batch-writer,sidetree-observer
     ports:
       - 7151:7051
       - 48426:48326
@@ -84,7 +84,7 @@ services:
       - CORE_PEER_LOCALMSPID=Org2MSP
       - CORE_PEER_ADDRESS=peer0.org2.example.com:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.example.com:7051
-      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-monitor
+      - CORE_LEDGER_ROLES=committer,sidetree-resolver,sidetree-batch-writer,sidetree-observer-standby
     ports:
       - 8051:7051
       - 48526:48326
@@ -106,7 +106,7 @@ services:
       - CORE_PEER_ADDRESS=peer1.org2.example.com:7051
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.example.com:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org2.example.com:7051
-      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-observer
+      - CORE_LEDGER_ROLES=endorser,sidetree-resolver,sidetree-batch-writer,sidetree-observer
     ports:
       - 8151:7051
       - 48626:48326
