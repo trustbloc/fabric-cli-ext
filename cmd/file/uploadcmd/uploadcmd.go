@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package uploadcmd
 
 import (
+	"crypto"
 	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/json"
@@ -24,9 +25,12 @@ import (
 
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 
+	"github.com/trustbloc/sidetree-core-go/pkg/commitment"
+	"github.com/trustbloc/sidetree-core-go/pkg/jws"
 	"github.com/trustbloc/sidetree-core-go/pkg/patch"
 	"github.com/trustbloc/sidetree-core-go/pkg/restapi/helper"
 	"github.com/trustbloc/sidetree-core-go/pkg/util/ecsigner"
+	"github.com/trustbloc/sidetree-core-go/pkg/util/pubkey"
 
 	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
 	"github.com/trustbloc/fabric-cli-ext/cmd/file/httpclient"
@@ -75,11 +79,11 @@ const (
 	contentAuthTokenFlag  = "contentauthtoken"
 	contentAuthTokenUsage = "The bearer authorization token to upload files to the URL specified by --url. This is only required if it is different from --authtoken. Example: --contentauthtoken mytoken" //nolint: gosec
 
-	fileIndexUpdatePWDFlag  = "pwd"
-	fileIndexUpdatePWDUsage = "The password required to update the file index Sidetree document. Example: --pwd pwd1"
+	fileIndexNextUpdateKeyFlag  = "nextupdatekey"
+	fileIndexNextUpdateKeyUsage = "The public key PEM used for creating commitment for next update of the index document. Example: --nextupdatekey 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEFMy2n9jYZChYSjdhK9vUWvPjz9tzBcEa13Ye33haxFsT//3kGxOQhI7yb3MJsDvwLtdfLL6txM3RdOrmLABBvw'"
 
-	fileIndexNextUpdatePWDFlag  = "nextpwd"
-	fileIndexNextUpdatePWDUsage = "The password required for the next update of the file index Sidetree document. Example: --nextpwd pwd2"
+	fileIndexNextUpdateKeyFileFlag  = "nextupdatekeyfile"
+	fileIndexNextUpdateKeyFileUsage = "The file that contains the public key PEM used for creating commitment for next update of the index document. Example: --nextupdatekeyfile ./next_update_public.key"
 
 	fileIndexSigningKeyFlag  = "signingkey"
 	fileIndexSigningKeyUsage = "The private key PEM used for signing the update of the index document. Example: --signingkey 'MHcCAQEEILmfa4yss8nsTJK2hKl+LAoiwW3p+eQzaHfITI9z8ptpoAoGCCqGSM49AwEHoUQDQgAEMd1/e/Nxh73bK12PEEcNSY9HxnP0N8er9ww9rjq1tNcsqfRjlL0bdTh9Basfn/4JrQHUHc6uS99yjQc+0u2bVg'"
@@ -102,16 +106,17 @@ const (
 )
 
 var (
-	errURLRequired                       = errors.New("URL (--url) is required")
-	errFilesRequired                     = errors.New("files (--files) is required")
-	errFileIndexURLRequired              = errors.New("file index URL (--idxurl) is required")
-	errFileIndexUpdatePWDRequired        = errors.New("password (--pwd) required")
-	errFileIndexNextUpdatePWDRequired    = errors.New("next update password (--nextpwd) required")
-	errNoFileExtension                   = errors.New("content type cannot be deduced since no file extension provided")
-	errUnknownExtension                  = errors.New("content type cannot be deduced from extension")
-	errSigningKeyOrFileRequired          = errors.New("either signing key (--signingkey) or key file (--signingkeyfile) is required")
-	errOnlyOneOfSigningKeyOrFileRequired = errors.New("only one of signing key (--signingkey) or key file (--signingkeyfile) may be specified")
-	errPrivateKeyNotFoundInPEM           = errors.New("private key not found in PEM")
+	errURLRequired                          = errors.New("URL (--url) is required")
+	errFilesRequired                        = errors.New("files (--files) is required")
+	errFileIndexURLRequired                 = errors.New("file index URL (--idxurl) is required")
+	errNextUpdateKeyOrFileRequired          = errors.New("either next update key (--nextupdatekey) or key file (--nextupdatekeyfile) is required")
+	errOnlyOneOfNextUpdateKeyOrFileRequired = errors.New("only one of next update key (--nextupdatekey) or key file (--nextupdatekeyfile) may be specified")
+	errNoFileExtension                      = errors.New("content type cannot be deduced since no file extension provided")
+	errUnknownExtension                     = errors.New("content type cannot be deduced from extension")
+	errSigningKeyOrFileRequired             = errors.New("either signing key (--signingkey) or key file (--signingkeyfile) is required")
+	errOnlyOneOfSigningKeyOrFileRequired    = errors.New("only one of signing key (--signingkey) or key file (--signingkeyfile) may be specified")
+	errPrivateKeyNotFoundInPEM              = errors.New("private key not found in PEM")
+	errPublicKeyNotFoundInPEM               = errors.New("public key not found in PEM")
 )
 
 type httpClient interface {
@@ -155,8 +160,8 @@ func newCmd(settings *environment.Settings, client httpClient) *cobra.Command {
 	cmd.Flags().StringVar(&c.authToken, authTokenFlag, "", authTokenUsage)
 	cmd.Flags().StringVar(&c.contentAuthToken, contentAuthTokenFlag, "", contentAuthTokenUsage)
 	cmd.Flags().StringVar(&c.fileIndexURL, fileIndexURLFlag, "", fileIndexURLUsage)
-	cmd.Flags().StringVar(&c.fileIndexUpdatePWD, fileIndexUpdatePWDFlag, "", fileIndexUpdatePWDUsage)
-	cmd.Flags().StringVar(&c.fileIndexNextUpdatePWD, fileIndexNextUpdatePWDFlag, "", fileIndexNextUpdatePWDUsage)
+	cmd.Flags().StringVar(&c.fileIndexNextUpdateKeyString, fileIndexNextUpdateKeyFlag, "", fileIndexNextUpdateKeyUsage)
+	cmd.Flags().StringVar(&c.fileIndexNextUpdateKeyFile, fileIndexNextUpdateKeyFileFlag, "", fileIndexNextUpdateKeyFileUsage)
 	cmd.Flags().StringVar(&c.fileIndexSigningKeyString, fileIndexSigningKeyFlag, "", fileIndexSigningKeyUsage)
 	cmd.Flags().StringVar(&c.fileIndexSigningKeyFile, fileIndexSigningKeyFileFlag, "", fileIndexSigningKeyFileUsage)
 	cmd.Flags().BoolVar(&c.noPrompt, noPromptFlag, false, noPromptUsage)
@@ -169,18 +174,18 @@ type command struct {
 	*basecmd.Command
 	client httpClient
 
-	file                      string
-	url                       string
-	authToken                 string
-	contentAuthToken          string
-	basePath                  string
-	fileIndexURL              string
-	fileIndexBaseURL          string
-	fileIndexUpdatePWD        string
-	fileIndexNextUpdatePWD    string
-	fileIndexSigningKeyFile   string
-	fileIndexSigningKeyString string
-	noPrompt                  bool
+	file                         string
+	url                          string
+	authToken                    string
+	contentAuthToken             string
+	basePath                     string
+	fileIndexURL                 string
+	fileIndexBaseURL             string
+	fileIndexSigningKeyFile      string
+	fileIndexSigningKeyString    string
+	fileIndexNextUpdateKeyFile   string
+	fileIndexNextUpdateKeyString string
+	noPrompt                     bool
 }
 
 func (c *command) validateAndProcessArgs() error {
@@ -196,15 +201,11 @@ func (c *command) validateAndProcessArgs() error {
 		return errFilesRequired
 	}
 
-	if c.fileIndexUpdatePWD == "" {
-		return errFileIndexUpdatePWDRequired
-	}
-
-	if c.fileIndexNextUpdatePWD == "" {
-		return errFileIndexNextUpdatePWDRequired
-	}
-
 	if err := c.validateSigningKey(); err != nil {
+		return err
+	}
+
+	if err := c.validateNextUpdateKey(); err != nil {
 		return err
 	}
 
@@ -400,13 +401,28 @@ func (c *command) getUpdateRequest(patchStr string) ([]byte, error) {
 		return nil, err
 	}
 
+	updateKeyPublic, err := c.updateKeyPublic()
+	if err != nil {
+		return nil, err
+	}
+
+	nextUpdateKeyPublic, err := c.nextUpdateKeyPublic()
+	if err != nil {
+		return nil, err
+	}
+
+	updateCommitment, err := commitment.Calculate(nextUpdateKeyPublic, sha2_256)
+	if err != nil {
+		return nil, err
+	}
+
 	return helper.NewUpdateRequest(&helper.UpdateRequestInfo{
-		DidSuffix:             uniqueSuffix,
-		UpdateRevealValue:     []byte(c.fileIndexUpdatePWD),
-		NextUpdateRevealValue: []byte(c.fileIndexNextUpdatePWD),
-		Patch:                 updatePatch,
-		MultihashCode:         sha2_256,
-		Signer:                updateKeySigner,
+		DidSuffix:        uniqueSuffix,
+		UpdateCommitment: updateCommitment,
+		UpdateKey:        updateKeyPublic,
+		Patch:            updatePatch,
+		MultihashCode:    sha2_256,
+		Signer:           updateKeySigner,
 	})
 }
 
@@ -467,6 +483,60 @@ func (c *command) updateKeySigner() (helper.Signer, error) {
 	return ecsigner.New(privateKey, signingAlgorithm, model.UpdateKeyID), nil
 }
 
+func (c *command) updateKeyPublic() (*jws.JWK, error) {
+	privateKey, err := c.signingPrivateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	return pubkey.GetPublicKeyJWK(&privateKey.PublicKey)
+}
+
+func (c *command) nextUpdateKeyPublic() (*jws.JWK, error) {
+	pubKey, err := c.nextUpdateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	return pubkey.GetPublicKeyJWK(pubKey)
+}
+
+func (c *command) nextUpdateKey() (crypto.PublicKey, error) {
+	if c.fileIndexNextUpdateKeyFile != "" {
+		return publicKeyFromFile(c.fileIndexNextUpdateKeyFile)
+	}
+
+	return publicKeyFromPEM([]byte(c.fileIndexNextUpdateKeyString))
+}
+
+func publicKeyFromFile(file string) (crypto.PublicKey, error) {
+	keyBytes, err := ioutil.ReadFile(filepath.Clean(file))
+	if err != nil {
+		return nil, err
+	}
+
+	return publicKeyFromPEM(keyBytes)
+}
+
+func publicKeyFromPEM(pubKeyPEM []byte) (crypto.PublicKey, error) {
+	block, _ := pem.Decode(pubKeyPEM)
+	if block == nil {
+		return nil, errPublicKeyNotFoundInPEM
+	}
+
+	key, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	publicKey, ok := key.(crypto.PublicKey)
+	if !ok {
+		return nil, errors.New("invalid public key")
+	}
+
+	return publicKey, nil
+}
+
 func (c *command) signingPrivateKey() (*ecdsa.PrivateKey, error) {
 	if c.fileIndexSigningKeyFile != "" {
 		return privateKeyFromFile(c.fileIndexSigningKeyFile)
@@ -482,6 +552,18 @@ func (c *command) validateSigningKey() error {
 
 	if c.fileIndexSigningKeyFile != "" && c.fileIndexSigningKeyString != "" {
 		return errOnlyOneOfSigningKeyOrFileRequired
+	}
+
+	return nil
+}
+
+func (c *command) validateNextUpdateKey() error {
+	if c.fileIndexNextUpdateKeyFile == "" && c.fileIndexNextUpdateKeyString == "" {
+		return errNextUpdateKeyOrFileRequired
+	}
+
+	if c.fileIndexNextUpdateKeyFile != "" && c.fileIndexNextUpdateKeyString != "" {
+		return errOnlyOneOfNextUpdateKeyOrFileRequired
 	}
 
 	return nil

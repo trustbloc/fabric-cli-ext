@@ -19,6 +19,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/trustbloc/sidetree-core-go/pkg/commitment"
 	"github.com/trustbloc/sidetree-core-go/pkg/document"
 	"github.com/trustbloc/sidetree-core-go/pkg/jws"
 	"github.com/trustbloc/sidetree-core-go/pkg/restapi/helper"
@@ -43,8 +44,7 @@ The create command allows a client to create a new file index document in Sidetr
 	Response:
 		{
 		  ".": "/content",
-		  "id": "file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA==",
-		  "published": false
+		  "id": "file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA=="
 		}
 `
 )
@@ -59,17 +59,11 @@ const (
 	authTokenFlag  = "authtoken"
 	authTokenUsage = "The bearer authorization token that may be required to access some HTTP endpoints. Example: --authtoken mytoken" //nolint: gosec
 
-	recoveryPWDFlag  = "recoverypwd"
-	recoveryPWDUsage = "The password for recovery of the document. Example: --recoverypwd myrecoverypwd"
-
 	recoveryKeyFlag  = "recoverykey"
 	recoveryKeyUsage = "The public key PEM used for recovery of the document. Example: --recoverykey 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXlp4fWF5rgLthKr20tsJ0tBIE6UmrGuAC8iVG/DaedkSt7HihCx/t2BGjooduaKwEIOmPjx2zBsbkbFrYhhnVw'"
 
 	recoveryKeyFileFlag  = "recoverykeyfile"
 	recoveryKeyFileUsage = "The file that contains the public key PEM used for recovery of the document. Example: --recoverykeyfile ./recovery_public.key"
-
-	nextUpdatePWDFlag  = "nextpwd"
-	nextUpdatePWDUsage = "The password for the next update of the document. Example: --nextpwd pwd2"
 
 	updateKeyFlag  = "updatekey"
 	updateKeyUsage = "The public key PEM used for validating the signature of the next update of the document. Example: --updatekey 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEFMy2n9jYZChYSjdhK9vUWvPjz9tzBcEa13Ye33haxFsT//3kGxOQhI7yb3MJsDvwLtdfLL6txM3RdOrmLABBvw'"
@@ -84,21 +78,16 @@ const (
 	msgContinueOrAbort = "Enter Y to continue or N to abort "
 
 	sha2_256 = 18
-
-	publicKeyField    = "publicKey"
-	publicKeyTemplate = `[{"id":"%s","type":"JwsVerificationKey2020","usage":["ops"],"jwk":%s}]`
 )
 
 var (
 	errURLRequired                        = errors.New("URL (--url) is required")
-	errRecoveryPWDRequired                = errors.New("recovery password (--recoverypwd) is required")
-	errNextUpdatePWDRequired              = errors.New("next update password (--nextpwd) is required")
 	errPathRequired                       = errors.New("path (--path) is required")
 	errInvalidPath                        = errors.New("path (--path) must begin with '/'")
 	errRecoveryKeyOrFileRequired          = errors.New("either recovery key (--recoverykey) or key file (--recoverykeyfile) is required")
 	errOnlyOneOfRecoveryKeyOrFileRequired = errors.New("only one of recovery key (--recoverykey) or key file (--recoverykeyfile) may be specified")
 	errUpdateKeyOrFileRequired            = errors.New("either update key (--updatekey) or key file (--updatekeyfile) is required")
-	errOnlyOneOfUpdateKeyOrFileRequired   = errors.New("only one of Update key (--updatekey) or key file (--updatekeyfile) may be specified")
+	errOnlyOneOfUpdateKeyOrFileRequired   = errors.New("only one of update key (--updatekey) or key file (--updatekeyfile) may be specified")
 	errPublicKeyNotFoundInPEM             = errors.New("public key not found in PEM")
 )
 
@@ -140,10 +129,8 @@ func newCmd(settings *environment.Settings, client httpClient) *cobra.Command {
 	cmd.Flags().StringVar(&c.url, urlFlag, "", urlUsage)
 	cmd.Flags().StringVar(&c.path, pathFlag, "", pathUsage)
 	cmd.Flags().StringVar(&c.authToken, authTokenFlag, "", authTokenUsage)
-	cmd.Flags().StringVar(&c.recoveryPWD, recoveryPWDFlag, "", recoveryPWDUsage)
 	cmd.Flags().StringVar(&c.recoveryKeyString, recoveryKeyFlag, "", recoveryKeyUsage)
 	cmd.Flags().StringVar(&c.recoveryKeyFile, recoveryKeyFileFlag, "", recoveryKeyFileUsage)
-	cmd.Flags().StringVar(&c.nextUpdatePWD, nextUpdatePWDFlag, "", nextUpdatePWDUsage)
 	cmd.Flags().StringVar(&c.updateKeyString, updateKeyFlag, "", updateKeyUsage)
 	cmd.Flags().StringVar(&c.updateKeyFile, updateKeyFileFlag, "", updateKeyFileUsage)
 	cmd.Flags().BoolVar(&c.noPrompt, noPromptFlag, false, noPromptUsage)
@@ -160,8 +147,6 @@ type command struct {
 	url               string
 	path              string
 	authToken         string
-	recoveryPWD       string
-	nextUpdatePWD     string
 	noPrompt          bool
 	recoveryKeyFile   string
 	recoveryKeyString string
@@ -180,14 +165,6 @@ func (c *command) validate() error {
 
 	if c.path[0:1] != "/" {
 		return errInvalidPath
-	}
-
-	if c.recoveryPWD == "" {
-		return errRecoveryPWDRequired
-	}
-
-	if c.nextUpdatePWD == "" {
-		return errNextUpdatePWDRequired
 	}
 
 	if err := c.validateRecoveryKey(); err != nil {
@@ -297,13 +274,27 @@ func (c *command) newCreateRequest(content string) ([]byte, error) {
 		return nil, err
 	}
 
+	recoveryCommitment, err := commitment.Calculate(recoveryKey, sha2_256)
+	if err != nil {
+		return nil, err
+	}
+
+	updateKey, err := c.updateKeyJWK()
+	if err != nil {
+		return nil, err
+	}
+
+	updateCommitment, err := commitment.Calculate(updateKey, sha2_256)
+	if err != nil {
+		return nil, err
+	}
+
 	return helper.NewCreateRequest(
 		&helper.CreateRequestInfo{
-			OpaqueDocument:          doc,
-			RecoveryKey:             recoveryKey,
-			NextRecoveryRevealValue: []byte(c.recoveryPWD),
-			NextUpdateRevealValue:   []byte(c.nextUpdatePWD),
-			MultihashCode:           sha2_256,
+			OpaqueDocument:     doc,
+			RecoveryCommitment: recoveryCommitment,
+			UpdateCommitment:   updateCommitment,
+			MultihashCode:      sha2_256,
 		},
 	)
 }
@@ -354,30 +345,10 @@ func (c *command) updatePublicKey() (crypto.PublicKey, error) {
 }
 
 func (c *command) getOpaqueDocument(content string) (string, error) {
-	updatePublicKey, err := c.updateKeyJWK()
-	if err != nil {
-		return "", err
-	}
-
-	publicKeyBytes, err := json.Marshal(updatePublicKey)
-	if err != nil {
-		return "", err
-	}
-
-	publicKeysStr := fmt.Sprintf(publicKeyTemplate, model.UpdateKeyID, string(publicKeyBytes))
-
-	var publicKeys []map[string]interface{}
-	err = json.Unmarshal([]byte(publicKeysStr), &publicKeys)
-	if err != nil {
-		return "", err
-	}
-
 	doc, err := document.FromBytes([]byte(content))
 	if err != nil {
 		return "", err
 	}
-
-	doc[publicKeyField] = publicKeys
 
 	bytes, err := doc.Bytes()
 	if err != nil {
