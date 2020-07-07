@@ -47,9 +47,6 @@ func TestCreateIDXCmd_InvalidOptions(t *testing.T) {
 		url                 = "http://localhost:80/file"
 		pathFlag            = "--path"
 		path                = "/content"
-		recoverypwdFlag     = "--recoverypwd"
-		nextupdatepwdFlag   = "--nextpwd"
-		pwd                 = "pwd1"
 		recoverykeyFlag     = "--recoverykey"
 		recoverykeyfileFlag = "--recoverykeyfile"
 		updatekeyFlag       = "--updatekey"
@@ -68,28 +65,20 @@ func TestCreateIDXCmd_InvalidOptions(t *testing.T) {
 		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, "content").Execute(), errInvalidPath.Error())
 	})
 
-	t.Run("Recovery password required", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path).Execute(), errRecoveryPWDRequired.Error())
-	})
-
-	t.Run("Next update password required", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path, recoverypwdFlag, pwd).Execute(), errNextUpdatePWDRequired.Error())
-	})
-
 	t.Run("Recovery key required", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path, recoverypwdFlag, pwd, nextupdatepwdFlag, pwd).Execute(), errRecoveryKeyOrFileRequired.Error())
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path, updatekeyFlag, updatePublicKey).Execute(), errRecoveryKeyOrFileRequired.Error())
 	})
 
 	t.Run("Recovery key and file specified", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path, recoverypwdFlag, pwd, nextupdatepwdFlag, pwd, recoverykeyFlag, recoveryPublicKey, recoverykeyfileFlag, "./key").Execute(), errOnlyOneOfRecoveryKeyOrFileRequired.Error())
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path, recoverykeyFlag, recoveryPublicKey, recoverykeyfileFlag, "./key").Execute(), errOnlyOneOfRecoveryKeyOrFileRequired.Error())
 	})
 
 	t.Run("Update key required", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path, recoverypwdFlag, pwd, nextupdatepwdFlag, pwd, recoverykeyFlag, recoveryPublicKey).Execute(), errUpdateKeyOrFileRequired.Error())
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path, recoverykeyFlag, recoveryPublicKey).Execute(), errUpdateKeyOrFileRequired.Error())
 	})
 
 	t.Run("Update key and file specified", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path, recoverypwdFlag, pwd, nextupdatepwdFlag, pwd, recoverykeyFlag, recoveryPublicKey, updatekeyFlag, updatePublicKey, updatekeyfileFlag, "./key").Execute(), errOnlyOneOfUpdateKeyOrFileRequired.Error())
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, pathFlag, path, recoverykeyFlag, recoveryPublicKey, updatekeyFlag, updatePublicKey, updatekeyfileFlag, "./key").Execute(), errOnlyOneOfUpdateKeyOrFileRequired.Error())
 	})
 }
 
@@ -108,7 +97,7 @@ func TestCreateIDXCmd(t *testing.T) {
 	didResolutionBytes, err := json.Marshal(didResolution)
 	require.NoError(t, err)
 
-	args := []string{"--url", "http://localhost:80/file", "--path", "/content", "--recoverypwd", "pwd1", "--nextpwd", "pwd1", "--recoverykey", recoveryPublicKey, "--updatekey", updatePublicKey, "--authtoken", "mytoken"}
+	args := []string{"--url", "http://localhost:80/file", "--path", "/content", "--recoverykey", recoveryPublicKey, "--updatekey", updatePublicKey, "--authtoken", "mytoken"}
 	header := map[string][]string{"Content-Type": {"application/json"}}
 
 	transport := mocks.NewTransport().WithPostResponse(
@@ -137,10 +126,20 @@ func TestCreateIDXCmd(t *testing.T) {
 		require.Contains(t, w.Written(), string(fileIndexBytes))
 	})
 
-	t.Run("With invalid key", func(t *testing.T) {
+	t.Run("With invalid update key", func(t *testing.T) {
 		w := &mocks.Writer{}
 
-		args := []string{"--url", "http://localhost:80/file", "--path", "/content", "--recoverypwd", "pwd1", "--nextpwd", "pwd1", "--recoverykey", recoveryPublicKey, "--updatekey", "xxx"}
+		args := []string{"--url", "http://localhost:80/file", "--path", "/content", "--recoverykey", recoveryPublicKey, "--updatekey", "xxx"}
+		c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, args...)
+		err := c.Execute()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), errPublicKeyNotFoundInPEM.Error())
+	})
+
+	t.Run("With invalid recovery key", func(t *testing.T) {
+		w := &mocks.Writer{}
+
+		args := []string{"--url", "http://localhost:80/file", "--path", "/content", "--recoverykey", "xxx", "--updatekey", updatePublicKey}
 		c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, args...)
 		err := c.Execute()
 		require.Error(t, err)
@@ -148,7 +147,7 @@ func TestCreateIDXCmd(t *testing.T) {
 	})
 
 	t.Run("With key files", func(t *testing.T) {
-		args := []string{"--url", "http://localhost:80/file", "--path", "/content", "--recoverypwd", "pwd1", "--nextpwd", "pwd1", "--noprompt"}
+		args := []string{"--url", "http://localhost:80/file", "--path", "/content", "--noprompt"}
 
 		t.Run("Update key file not found -> error", func(t *testing.T) {
 			w := &mocks.Writer{}

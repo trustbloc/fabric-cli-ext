@@ -30,6 +30,11 @@ MHcCAQEEICGc6pOTBng8ZC8ZL/oNLGb1vQrHzmRSTQzKu/kKji/2oAoGCCqGSM49
 AwEHoUQDQgAEbENaETENCgl8+qgls5JBgogX8Vp1G8qXPRBB6W9pzfiphvbPl52B
 9PLZAWFLcHsP3jsdhag9KNSeVKrQtRshPw==
 -----END PRIVATE KEY-----`
+	nextUpdateKey = `
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElcGANYeB0oOlVCYlnJCjRxgBukOz
+72RAT6SXWYG3vvL0gXm0BdpjQgHAHYKBDQwIW55FNKlm/YpdKjlPWP8PIA==
+-----END PUBLIC KEY-----`
 )
 
 func TestUloadCmd_New(t *testing.T) {
@@ -38,17 +43,16 @@ func TestUloadCmd_New(t *testing.T) {
 
 func TestUloadCmd_InvalidOptions(t *testing.T) {
 	const (
-		urlFlag            = "--url"
-		url                = "http://localhost:80/content"
-		filesFlag          = "--files"
-		files              = "./samplefile.json"
-		idxUrlFlag         = "--idxurl"
-		idxUrl             = "http://localhost:80/file/file:idx:1234"
-		pwdFlag            = "--pwd"
-		nextpwdFlag        = "--nextpwd"
-		pwd                = "pwd1"
-		signingkeyFlag     = "--signingkey"
-		signingkeyfileFlag = "--signingkeyfile"
+		urlFlag               = "--url"
+		url                   = "http://localhost:80/content"
+		filesFlag             = "--files"
+		files                 = "./samplefile.json"
+		idxUrlFlag            = "--idxurl"
+		idxUrl                = "http://localhost:80/file/file:idx:1234"
+		nextUpdateKeyFlag     = "--nextupdatekey"
+		nextUpdateKeyFileFlag = "--nextupdatekeyfile"
+		signingkeyFlag        = "--signingkey"
+		signingkeyfileFlag    = "--signingkeyfile"
 	)
 
 	t.Run("No options", func(t *testing.T) {
@@ -75,20 +79,20 @@ func TestUloadCmd_InvalidOptions(t *testing.T) {
 		require.Contains(t, err.Error(), "invalid file index URL")
 	})
 
-	t.Run("No --pwd", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl).Execute(), errFileIndexUpdatePWDRequired.Error())
+	t.Run("Next update key required", func(t *testing.T) {
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl, signingkeyFlag, signingKey).Execute(), errNextUpdateKeyOrFileRequired.Error())
 	})
 
-	t.Run("No --nextpwd", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl, pwdFlag, pwd).Execute(), errFileIndexNextUpdatePWDRequired.Error())
+	t.Run("Next update key and file specified", func(t *testing.T) {
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl, nextUpdateKeyFlag, nextUpdateKey, nextUpdateKeyFileFlag, "./pub_key", signingkeyFlag, signingKey).Execute(), errOnlyOneOfNextUpdateKeyOrFileRequired.Error())
 	})
 
 	t.Run("Update key required", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl, pwdFlag, pwd, nextpwdFlag, pwd).Execute(), errSigningKeyOrFileRequired.Error())
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl, nextUpdateKeyFlag, nextUpdateKey, nextUpdateKeyFileFlag, "./pub_key").Execute(), errSigningKeyOrFileRequired.Error())
 	})
 
 	t.Run("Update key and file specified", func(t *testing.T) {
-		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl, pwdFlag, pwd, nextpwdFlag, pwd, signingkeyFlag, signingKey, signingkeyfileFlag, "./key").Execute(), errOnlyOneOfSigningKeyOrFileRequired.Error())
+		require.EqualError(t, newMockCmd(t, nil, urlFlag, url, filesFlag, files, idxUrlFlag, idxUrl, nextUpdateKeyFileFlag, "./pub_key", signingkeyFlag, signingKey, signingkeyfileFlag, "./key").Execute(), errOnlyOneOfSigningKeyOrFileRequired.Error())
 	})
 }
 
@@ -102,7 +106,7 @@ func TestUploadCmd(t *testing.T) {
 	)
 
 	var (
-		args   = []string{"--url", url, "--files", files, "--idxurl", idxUrl, "--pwd", "pwd1", "--nextpwd", "pwd2", "--signingkey", signingKey, "--authtoken", "mytoken", "--contentauthtoken", "mytoken"}
+		args   = []string{"--url", url, "--files", files, "--idxurl", idxUrl, "--nextupdatekey", nextUpdateKey, "--signingkey", signingKey, "--authtoken", "mytoken", "--contentauthtoken", "mytoken"}
 		header = map[string][]string{"Content-Type": {"application/json"}}
 	)
 
@@ -157,7 +161,7 @@ func TestUploadCmd(t *testing.T) {
 	t.Run("With invalid key", func(t *testing.T) {
 		w := &mocks.Writer{}
 
-		args := []string{"--url", url, "--files", files, "--idxurl", idxUrl, "--pwd", "pwd1", "--nextpwd", "pwd2", "--signingkey", "xxx", "--noprompt"}
+		args := []string{"--url", url, "--files", files, "--idxurl", idxUrl, "--nextupdatekey", nextUpdateKey, "--signingkey", "xxx", "--noprompt"}
 		c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, args...)
 		err := c.Execute()
 		require.Error(t, err)
@@ -165,8 +169,8 @@ func TestUploadCmd(t *testing.T) {
 		require.Contains(t, w.Written(), err.Error())
 	})
 
-	t.Run("With key file", func(t *testing.T) {
-		args := []string{"--url", url, "--files", files, "--idxurl", idxUrl, "--pwd", "pwd1", "--nextpwd", "pwd2", "--noprompt"}
+	t.Run("With signing key file", func(t *testing.T) {
+		args := []string{"--url", url, "--files", files, "--idxurl", idxUrl, "--nextupdatekey", nextUpdateKey, "--noprompt"}
 
 		t.Run("Success", func(t *testing.T) {
 			w := &mocks.Writer{}
@@ -179,6 +183,28 @@ func TestUploadCmd(t *testing.T) {
 		t.Run("Key file not found -> error", func(t *testing.T) {
 			w := &mocks.Writer{}
 			c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, append(args, "--signingkeyfile", "./xxx.key")...)
+
+			err := c.Execute()
+			require.Error(t, err)
+			require.Contains(t, err.Error(), "no such file or directory")
+			require.Contains(t, w.Written(), err.Error())
+		})
+	})
+
+	t.Run("With next update key file", func(t *testing.T) {
+		args := []string{"--url", url, "--files", files, "--idxurl", idxUrl, "--signingkeyfile", "../testdata/update_private.key", "--noprompt"}
+
+		t.Run("Success", func(t *testing.T) {
+			w := &mocks.Writer{}
+			c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, append(args, "--nextupdatekeyfile", "../testdata/update_public.key")...)
+			require.NoError(t, c.Execute())
+			require.NotContains(t, w.Written(), msgContinueOrAbort)
+			require.Contains(t, w.Written(), resp)
+		})
+
+		t.Run("Key file not found -> error", func(t *testing.T) {
+			w := &mocks.Writer{}
+			c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, append(args, "--nextupdatekeyfile", "./xxx.key")...)
 
 			err := c.Execute()
 			require.Error(t, err)

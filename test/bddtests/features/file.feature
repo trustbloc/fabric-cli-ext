@@ -53,7 +53,7 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
   @sidetree_file_s1
   Scenario: Test the file command
     # Create a file index document
-    When fabric-cli is executed with args "file createidx --path /content --url http://localhost:48326/file --recoverypwd pwd1 --nextpwd pwd1 --recoverykeyfile ./fixtures/testdata/keys/recover/public.key --updatekeyfile ./fixtures/testdata/keys/update/public.key --authtoken ${token_fileidx_w} --noprompt"
+    When fabric-cli is executed with args "file createidx --path /content --url http://localhost:48326/file --recoverykeyfile ./fixtures/testdata/keys/recover/public.key --updatekeyfile ./fixtures/testdata/keys/update/public.key --authtoken ${token_fileidx_w} --noprompt"
     And the JSON path "id" of the response is saved to variable "fileIdxID"
 
     # Update the file handler configuration for the '/content' path with the ID of the file index document
@@ -69,7 +69,7 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
     # Upload a couple of files and add them to the file index document
     # NOTE: Use an explicit --contentauthtoken to test the case where the auth token for /file and /content are different. Otherwise,
     # if they're the same, we don't need to specify --contentauthtoken.
-    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/arrays.schema.json;./fixtures/testdata/v1/geographical-location.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --pwd pwd1 --nextpwd pwd2 --signingkeyfile ./fixtures/testdata/keys/update/private.key --authtoken ${token_fileidx_w} --contentauthtoken ${token_content_w} --noprompt"
+    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/arrays.schema.json;./fixtures/testdata/v1/geographical-location.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --nextupdatekeyfile ./fixtures/testdata/keys/update/public.key --signingkeyfile ./fixtures/testdata/keys/update/private.key --authtoken ${token_fileidx_w} --contentauthtoken ${token_content_w} --noprompt"
     Then the JSON path "#" of the response has 2 items
     And the JSON path "0.Name" of the response equals "arrays.schema.json"
     And the JSON path "0.ContentType" of the response equals "application/json"
@@ -101,7 +101,7 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
 
     # Upload more files and add them to the file index document. Note that arrays.schema.json is updated to v2
     # NOTE: Don't use an explicit --contentauthtoken to test the case where the auth token for /file and /content are the same
-    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/person.schema.json;./fixtures/testdata/v1/raised-hand.png;./fixtures/testdata/v1/text1.txt;./fixtures/testdata/v2/arrays.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --pwd pwd2 --nextpwd pwd3 --signingkeyfile ./fixtures/testdata/keys/update/private.key --authtoken ${token_fileidx_w} --noprompt"
+    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/person.schema.json;./fixtures/testdata/v1/raised-hand.png;./fixtures/testdata/v1/text1.txt;./fixtures/testdata/v2/arrays.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --nextupdatekeyfile ./fixtures/testdata/keys/update/public.key --signingkeyfile ./fixtures/testdata/keys/update/private.key --authtoken ${token_fileidx_w} --noprompt"
     Then the JSON path "#" of the response has 4 items
     And the JSON path "0.Name" of the response equals "person.schema.json"
     And the JSON path "0.ContentType" of the response equals "application/json"
