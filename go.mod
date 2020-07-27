@@ -5,18 +5,18 @@
 module github.com/trustbloc/fabric-cli-ext
 
 require (
-	github.com/hyperledger/fabric-cli v0.0.0-20200520152702-fe576fa62768
-	github.com/hyperledger/fabric-protos-go v0.0.0-20191121202242-f5500d5e3e85
-	github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20200222173625-ff3bdd738791
+	github.com/hyperledger/fabric-cli v0.0.0-20200724205143-a0c7ed9f8b3c
+	github.com/hyperledger/fabric-protos-go v0.0.0-20200707132912-fee30f3ccd23
+	github.com/hyperledger/fabric-sdk-go v1.0.0-beta2.0.20200724161828-7b97fdf0b97a
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v0.0.4
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/trustbloc/sidetree-core-go v0.1.4-0.20200702215916-b02022f5ec37
 )
 
 go 1.13
 
-replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.3
+replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.4-0.20200626180529-18936b36feca
 
 replace github.com/sirupsen/logrus => github.com/sirupsen/logrus v1.3.0
 
@@ -26,8 +26,8 @@ replace golang.org/x/sys => golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5
 
 replace gopkg.in/check.v1 => gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
 
-replace github.com/stretchr/testify => github.com/stretchr/testify v1.4.0
-
-replace github.com/btcsuite/websocket => github.com/btcsuite/websocket v0.0.0-20150119174127-31079b680792
+replace github.com/stretchr/testify => github.com/stretchr/testify v1.5.1
 
 replace github.com/spaolacci/murmur3 => github.com/spaolacci/murmur3 v1.1.0
+
+replace gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.3.0
