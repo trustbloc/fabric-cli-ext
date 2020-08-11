@@ -10,6 +10,8 @@ import (
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 	"github.com/spf13/cobra"
 
+	"github.com/trustbloc/fabric-cli-ext/cmd/extensions/approvecmd"
+	"github.com/trustbloc/fabric-cli-ext/cmd/extensions/commitcmd"
 	"github.com/trustbloc/fabric-cli-ext/cmd/extensions/instantiatecmd"
 )
 
@@ -29,8 +31,12 @@ func New(settings *environment.Settings) *cobra.Command {
 			cmd.HelpFunc()(cmd, args)
 		},
 	}
+
 	cmd.AddCommand(
 		instantiatecmd.New(settings),
+		approvecmd.New(settings),
+		commitcmd.New(settings),
 	)
+
 	return cmd
 }

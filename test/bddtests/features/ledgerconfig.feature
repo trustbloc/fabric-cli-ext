@@ -17,13 +17,19 @@ Feature: ledger-config
     And fabric-cli plugin "../../.build/ledgerconfig" is installed
     And fabric-cli plugin "../../.build/extensions" is installed
     And fabric-cli context "org1-admin-context" is defined on channel "mychannel" with org "peerorg1", peers "peer0.org1.example.com,peer1.org1.example.com" and user "Admin"
+    And fabric-cli context "org2-admin-context" is defined on channel "mychannel" with org "peerorg2", peers "peer0.org2.example.com,peer1.org2.example.com" and user "Admin"
     And fabric-cli context "org1-context" is defined on channel "mychannel" with org "peerorg1", peers "peer0.org1.example.com,peer1.org1.example.com" and user "User1"
     And fabric-cli context "org2-context" is defined on channel "mychannel" with org "peerorg2", peers "peer0.org2.example.com,peer1.org2.example.com" and user "User1"
 
+    Given variable "both-orgs-policy" is assigned the value "AND('Org1MSP.member','Org2MSP.member')"
     Given fabric-cli context "org1-admin-context" is used
-    Then fabric-cli is executed with args "extensions instantiatecc configscc v1 --policy AND('Org1MSP.member','Org2MSP.member')" ignoring error ".*chaincode with name '.*' already exists.*"
+    Then fabric-cli is executed with args "lifecycle approve configscc v1 configscc:v1 1 --policy ${both-orgs-policy}" ignoring error ".*ENDORSEMENT_POLICY_FAILURE.*"
+    Given fabric-cli context "org2-admin-context" is used
+    Then fabric-cli is executed with args "lifecycle approve configscc v1 configscc:v1 1 --policy ${both-orgs-policy}" ignoring error ".*ENDORSEMENT_POLICY_FAILURE.*"
+    And we wait 5 seconds
 
-    Then we wait 10 seconds
+    Then fabric-cli is executed with args "lifecycle commit configscc v1 1 --policy ${both-orgs-policy} --peer peer0.org1.example.com --peer peer0.org2.example.com" ignoring error ".*requested sequence is 1, but new definition must be sequence 2.*"
+    And we wait 10 seconds
 
   @ledgerconfig_s1
   Scenario: Test the ledgerconfig sub-commands: update, query, and delete

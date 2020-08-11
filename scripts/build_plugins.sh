@@ -38,6 +38,18 @@ replace gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.3.0
 /usr/bin/sed -i '' '$a\
 replace github.com/stretchr/testify => github.com/stretchr/testify v1.5.1
 ' go.mod
+/usr/bin/sed -i '' '$a\
+replace github.com/pkg/errors => github.com/pkg/errors v0.9.1
+' go.mod
+/usr/bin/sed -i '' '$a\
+replace golang.org/x/xerrors => golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
+' go.mod
+/usr/bin/sed -i '' '$a\
+replace golang.org/x/net => golang.org/x/net v0.0.0-20200202094626-16171245cfb2
+' go.mod
+/usr/bin/sed -i '' '$a\
+replace github.com/spf13/cobra => github.com/spf13/cobra v0.0.6
+' go.mod
 else
 sed  -e "\$areplace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.4-0.20200626180529-18936b36feca" -i go.mod
 sed  -e "\$areplace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678" -i go.mod
@@ -45,6 +57,10 @@ sed  -e "\$areplace golang.org/x/sys => golang.org/x/sys v0.0.0-20200202164722-d
 sed  -e "\$areplace gopkg.in/check.v1 => gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127" -i go.mod
 sed  -e "\$areplace gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.3.0" -i go.mod
 sed  -e "\$areplace github.com/stretchr/testify => github.com/stretchr/testify v1.5.1" -i go.mod
+sed  -e "\$areplace github.com/pkg/errors => github.com/pkg/errors v0.9.1" -i go.mod
+sed  -e "\$areplace golang.org/x/xerrors => golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543" -i go.mod
+sed  -e "\$areplace golang.org/x/net => golang.org/x/net v0.0.0-20200202094626-16171245cfb2" -i go.mod
+sed  -e "\$areplace github.com/spf13/cobra => github.com/spf13/cobra v0.0.6" -i go.mod
 fi
 
 make
