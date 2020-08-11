@@ -72,10 +72,10 @@ func (d *FabricCLISteps) useContext(name string) error {
 	return err
 }
 
-func (d *FabricCLISteps) execute(expr string) error {
+func (d *FabricCLISteps) execute(strArgs string) error {
 	bddtests.ClearResponse()
 
-	strArgs, err := bddtests.ResolveVarsInExpression(expr)
+	err := bddtests.ResolveVarsInExpression(&strArgs)
 	if err != nil {
 		return err
 	}

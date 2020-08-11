@@ -5,13 +5,13 @@
 module github.com/trustbloc/fabric-cli-ext
 
 require (
-	github.com/hyperledger/fabric-cli v0.0.0-20200724205143-a0c7ed9f8b3c
+	github.com/hyperledger/fabric-cli v0.0.0-20200811135714-125d14699544
 	github.com/hyperledger/fabric-protos-go v0.0.0-20200707132912-fee30f3ccd23
-	github.com/hyperledger/fabric-sdk-go v1.0.0-beta2.0.20200724161828-7b97fdf0b97a
-	github.com/pkg/errors v0.8.1
-	github.com/spf13/cobra v0.0.4
+	github.com/hyperledger/fabric-sdk-go v1.0.0-beta2.0.20200807145244-92e563b57775
+	github.com/pkg/errors v0.9.1
+	github.com/spf13/cobra v0.0.6
 	github.com/stretchr/testify v1.5.1
-	github.com/trustbloc/sidetree-core-go v0.1.4-0.20200702215916-b02022f5ec37
+	github.com/trustbloc/sidetree-core-go v0.1.4-0.20200805170300-1bbe946486c7
 )
 
 go 1.13

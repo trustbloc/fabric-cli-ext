@@ -18,10 +18,9 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
     And fabric-cli plugin "../../.build/file" is installed
     And fabric-cli plugin "../../.build/extensions" is installed
     And fabric-cli context "org1-admin-context" is defined on channel "mychannel" with org "peerorg1", peers "peer0.org1.example.com,peer1.org1.example.com" and user "Admin"
+    And fabric-cli context "org2-admin-context" is defined on channel "mychannel" with org "peerorg2", peers "peer0.org2.example.com,peer1.org2.example.com" and user "Admin"
     And fabric-cli context "org1-context" is defined on channel "mychannel" with org "peerorg1", peers "peer0.org1.example.com,peer1.org1.example.com" and user "User1"
     And fabric-cli context "org2-context" is defined on channel "mychannel" with org "peerorg2", peers "peer0.org2.example.com,peer1.org2.example.com" and user "User1"
-
-    Given fabric-cli context "org1-admin-context" is used
 
     Given variable "both-orgs-policy" is assigned the value "AND('Org1MSP.member','Org2MSP.member')"
     And variable "single-org-policy" is assigned the value "OR('Org1MSP.member','Org2MSP.member')"
@@ -32,10 +31,26 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
     Given variable "fileidxdoc-coll-cfg" is assigned the JSON value '{"name":"fileidxdoc","type":"COL_OFFLEDGER","policy":"${implicit-org-policy}","requiredPeerCount":0,"maxPeerCount":0,"timeToLive":""}'
     Given variable "consortium-coll-cfg" is assigned the JSON value '{"name":"consortium","type":"COL_DCAS","policy":"${single-org-policy}","requiredPeerCount":1,"maxPeerCount":2,"timeToLive":""}'
 
-    Then fabric-cli is executed with args "extensions instantiatecc configscc v1 --policy ${both-orgs-policy}" ignoring error ".*chaincode with name '.*' already exists.*"
-    And fabric-cli is executed with args "extensions instantiatecc sidetreetxn v1 --policy ${both-orgs-policy} --collections-config [${sidetreetxn-coll-cfg}]" ignoring error ".*chaincode with name '.*' already exists.*"
-    And fabric-cli is executed with args "extensions instantiatecc document v1 --policy ${single-org-policy} --collections-config [${fileidxdoc-coll-cfg},${metadata-coll-cfg}]" ignoring error ".*chaincode with name '.*' already exists.*"
-    And fabric-cli is executed with args "extensions instantiatecc file v1 --policy ${single-org-policy} --collections-config [${consortium-coll-cfg}]" ignoring error ".*chaincode with name '.*' already exists.*"
+    # Org1 approves the chaincodes
+    Given fabric-cli context "org1-admin-context" is used
+    Then fabric-cli is executed with args "extensions approvecc configscc v1 configscc:v1 1 --policy ${both-orgs-policy}" ignoring error ".*ENDORSEMENT_POLICY_FAILURE.*"
+    Then fabric-cli is executed with args "extensions approvecc sidetreetxn v1 sidetreetxn:v1 1 --policy ${both-orgs-policy} --collections-config [${sidetreetxn-coll-cfg}]" ignoring error ".*ENDORSEMENT_POLICY_FAILURE.*"
+    Then fabric-cli is executed with args "extensions approvecc document v1 document:v1 1 --policy ${single-org-policy} --collections-config [${fileidxdoc-coll-cfg},${metadata-coll-cfg}]" ignoring error ".*ENDORSEMENT_POLICY_FAILURE.*"
+    Then fabric-cli is executed with args "extensions approvecc file v1 file:v1 1 --policy ${single-org-policy} --collections-config [${consortium-coll-cfg}]" ignoring error ".*ENDORSEMENT_POLICY_FAILURE.*"
+
+    # Org2 approves the chaincodes
+    Given fabric-cli context "org2-admin-context" is used
+    Then fabric-cli is executed with args "extensions approvecc configscc v1 configscc:v1 1 --policy ${both-orgs-policy}" ignoring error ".*ENDORSEMENT_POLICY_FAILURE.*"
+    Then fabric-cli is executed with args "extensions approvecc sidetreetxn v1 sidetreetxn:v1 1 --policy ${both-orgs-policy} --collections-config [${sidetreetxn-coll-cfg}]" ignoring error ".*ENDORSEMENT_POLICY_FAILURE.*"
+    Then fabric-cli is executed with args "extensions approvecc document v1 document:v1 1 --policy ${single-org-policy} --collections-config [${fileidxdoc-coll-cfg},${metadata-coll-cfg}]" ignoring error ".*ENDORSEMENT_POLICY_FAILURE.*"
+    Then fabric-cli is executed with args "extensions approvecc file v1 file:v1 1 --policy ${single-org-policy} --collections-config [${consortium-coll-cfg}]" ignoring error ".*ENDORSEMENT_POLICY_FAILURE.*"
+    And we wait 10 seconds
+
+    # Commit the chaincodes
+    Then fabric-cli is executed with args "extensions commitcc configscc v1 1 --policy ${both-orgs-policy} --peer peer0.org1.example.com --peer peer0.org2.example.com" ignoring error ".*requested sequence is 1, but new definition must be sequence 2.*"
+    Then fabric-cli is executed with args "extensions commitcc sidetreetxn v1 1 --policy ${both-orgs-policy} --collections-config [${sidetreetxn-coll-cfg}] --peer peer0.org1.example.com --peer peer0.org2.example.com" ignoring error ".*requested sequence is 1, but new definition must be sequence 2.*"
+    Then fabric-cli is executed with args "extensions commitcc document v1 1 --policy ${single-org-policy} --collections-config [${fileidxdoc-coll-cfg},${metadata-coll-cfg}] --peer peer0.org1.example.com --peer peer0.org2.example.com" ignoring error ".*requested sequence is 1, but new definition must be sequence 2.*"
+    Then fabric-cli is executed with args "extensions commitcc file v1 1 --policy ${single-org-policy} --collections-config [${consortium-coll-cfg}] --peer peer0.org1.example.com --peer peer0.org2.example.com" ignoring error ".*requested sequence is 1, but new definition must be sequence 2.*"
 
     Then we wait 10 seconds
 
@@ -69,7 +84,7 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
     # Upload a couple of files and add them to the file index document
     # NOTE: Use an explicit --contentauthtoken to test the case where the auth token for /file and /content are different. Otherwise,
     # if they're the same, we don't need to specify --contentauthtoken.
-    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/arrays.schema.json;./fixtures/testdata/v1/geographical-location.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --nextupdatekeyfile ./fixtures/testdata/keys/update/public.key --signingkeyfile ./fixtures/testdata/keys/update/private.key --authtoken ${token_fileidx_w} --contentauthtoken ${token_content_w} --noprompt"
+    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/arrays.schema.json;./fixtures/testdata/v1/geographical-location.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --nextupdatekeyfile ./fixtures/testdata/keys/update2/public.key --signingkeyfile ./fixtures/testdata/keys/update/private.key --authtoken ${token_fileidx_w} --contentauthtoken ${token_content_w} --noprompt"
     Then the JSON path "#" of the response has 2 items
     And the JSON path "0.Name" of the response equals "arrays.schema.json"
     And the JSON path "0.ContentType" of the response equals "application/json"
@@ -101,7 +116,7 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
 
     # Upload more files and add them to the file index document. Note that arrays.schema.json is updated to v2
     # NOTE: Don't use an explicit --contentauthtoken to test the case where the auth token for /file and /content are the same
-    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/person.schema.json;./fixtures/testdata/v1/raised-hand.png;./fixtures/testdata/v1/text1.txt;./fixtures/testdata/v2/arrays.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --nextupdatekeyfile ./fixtures/testdata/keys/update/public.key --signingkeyfile ./fixtures/testdata/keys/update/private.key --authtoken ${token_fileidx_w} --noprompt"
+    When fabric-cli is executed with args "file upload --url http://localhost:48326/content --files ./fixtures/testdata/v1/person.schema.json;./fixtures/testdata/v1/raised-hand.png;./fixtures/testdata/v1/text1.txt;./fixtures/testdata/v2/arrays.schema.json --idxurl http://localhost:48326/file/${fileIdxID} --nextupdatekeyfile ./fixtures/testdata/keys/update3/public.key --signingkeyfile ./fixtures/testdata/keys/update2/private.key --authtoken ${token_fileidx_w} --noprompt"
     Then the JSON path "#" of the response has 4 items
     And the JSON path "0.Name" of the response equals "person.schema.json"
     And the JSON path "0.ContentType" of the response equals "application/json"

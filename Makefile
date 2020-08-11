@@ -26,7 +26,7 @@ PROJECT_NAME            = fabric-cli-ext
 ARCH                    = $(shell go env GOARCH)
 GO_VER                  = $(shell grep "GO_VER" .ci-properties |cut -d'=' -f2-)
 export GO111MODULE      = on
-export FABRIC_CLI_VERSION ?= a0c7ed9f8b3c9e2049f5572c2556479d41a24b90
+export FABRIC_CLI_VERSION ?= 125d146995448bab0a3ac28ea3137888da90a97d
 
 # Fabric tools docker image (overridable)
 FABRIC_TOOLS_IMAGE   ?= hyperledger/fabric-tools
@@ -87,8 +87,8 @@ bddtests: populate-fixtures docker-thirdparty
 	@scripts/integration.sh
 
 docker-thirdparty:
-	docker pull couchdb:2.3.0
-	docker pull hyperledger/fabric-orderer:$(ARCH)-2.0.0
+	docker pull couchdb:3.1
+	docker pull hyperledger/fabric-orderer:$(ARCH)-2.2.0
 
 clean-images: CONTAINER_IDS = $(shell docker ps -a -q)
 clean-images: DEV_IMAGES    = $(shell docker images dev-* -q)
