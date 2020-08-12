@@ -121,10 +121,6 @@ func (c *command) Validate() error {
 		return errors.New("sequence must be greater than 0")
 	}
 
-	if len(c.peers) == 0 {
-		return errors.New("at least one peer must be specified")
-	}
-
 	return nil
 }
 

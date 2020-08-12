@@ -64,11 +64,10 @@ func TestCommitCmd(t *testing.T) {
 		require.Equal(t, "Error: sequence must be greater than 0", w.Written())
 	})
 
-	t.Run("Missing peer", func(t *testing.T) {
+	t.Run("No peers specified", func(t *testing.T) {
 		w := &mocks.Writer{}
 		c := newMockCmd(t, w, p, "cc1", "v1", "1")
-		require.EqualError(t, c.Execute(), "at least one peer must be specified")
-		require.Equal(t, "Error: at least one peer must be specified", w.Written())
+		require.NoError(t, c.Execute())
 	})
 
 	t.Run("Success", func(t *testing.T) {
