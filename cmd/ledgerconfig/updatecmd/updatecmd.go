@@ -16,8 +16,10 @@ import (
 
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
 	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
 	"github.com/trustbloc/fabric-cli-ext/cmd/ledgerconfig/common"
 )
@@ -240,7 +242,7 @@ func (c *command) run() error {
 		return err
 	}
 
-	_, err = ch.Execute(req)
+	_, err = ch.Execute(req, channel.WithRetry(retry.DefaultChannelOpts))
 	if err != nil {
 		return err
 	}
