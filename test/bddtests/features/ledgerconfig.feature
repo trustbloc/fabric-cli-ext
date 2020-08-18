@@ -33,21 +33,23 @@ Feature: ledger-config
 
   @ledgerconfig_s1
   Scenario: Test the ledgerconfig sub-commands: update, query, and delete
-    # Use org1 to save the config
-    Given fabric-cli context "org1-context" is used
 
     Given variable "org1Config" is assigned the JSON value '{"MspID":"Org1MSP","Apps":[{"AppName":"app1","Version":"v1","Components":[{"Name":"comp1","Version":"v1","Config":"org1-app1-comp1-config","Format":"Other"},{"Name":"comp2","Version":"v1","Config":"org1-app1-comp2-config","Format":"Other"}]}]}'
     Given variable "org2Config" is assigned the JSON value '{"MspID":"Org2MSP","Apps":[{"AppName":"app1","Version":"v1","Components":[{"Name":"comp1","Version":"v1","Config":"org2-app1-comp1-config","Format":"Other"},{"Name":"comp2","Version":"v1","Config":"org2-app1-comp2-config","Format":"Other"}]}]}'
     Given variable "generalConfig" is assigned the JSON value '{"MspID":"general","Apps":[{"AppName":"app1","Version":"v1","Config":"general-app1-config","Format":"Other","Components":[{"Name":"comp1","Version":"v1","Config":"general-app1-comp1-config","Format":"Other"},{"Name":"comp2","Version":"v1","Config":"general-app1-comp2-config","Format":"Other"}]}]}'
+    Given fabric-cli context "org1-context" is used
     When fabric-cli is executed with args "ledgerconfig update --config ${org1Config} --noprompt"
+    Given fabric-cli context "org2-context" is used
     And fabric-cli is executed with args "ledgerconfig update --config ${org2Config} --noprompt"
+    # Use org1 to save the general config
+    Given fabric-cli context "org1-context" is used
     And fabric-cli is executed with args "ledgerconfig update --config ${generalConfig} --noprompt"
     Then we wait 1 seconds
 
     # Use org2 to query the config
     Given fabric-cli context "org2-context" is used
     # Query using --criteria
-    Given variable "noMatchingCriteria" is assigned the JSON value '{"MspID":"OrgXMSP"}'
+    Given variable "noMatchingCriteria" is assigned the JSON value '{"MspID":"Org1MSP","AppName":"appX"}'
     When fabric-cli is executed with args "ledgerconfig query --criteria ${noMatchingCriteria}"
     Then the JSON path "#" of the response has 0 items
 
@@ -79,8 +81,7 @@ Feature: ledger-config
     And the JSON path "2.AppName" of the response equals "app1"
 
     # Query using flags
-    Given variable "noMatchingCriteria" is assigned the JSON value '{"MspID":"OrgXMSP"}'
-    When fabric-cli is executed with args "ledgerconfig query --mspid OrgXMSP"
+    When fabric-cli is executed with args "ledgerconfig query --mspid Org1MSP --appname appX"
     Then the JSON path "#" of the response has 0 items
 
     When fabric-cli is executed with args "ledgerconfig query --mspid Org1MSP --appname app1"
@@ -103,6 +104,7 @@ Feature: ledger-config
     When fabric-cli is executed with args "ledgerconfig query --mspid Org1MSP --appname app1 --appver v1 --componentname comp1 --componentver v1"
     Then the JSON path "#" of the response has 1 items
     # Delete the item
+    Given fabric-cli context "org1-context" is used
     When fabric-cli is executed with args "ledgerconfig delete --mspid Org1MSP --appname app1 --appver v1 --componentname comp1 --componentver v1 --noprompt"
     Then we wait 1 seconds
     # Now make sure the item is not there
