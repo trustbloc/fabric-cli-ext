@@ -57,6 +57,7 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
     Given fabric-cli context "org1-context" is used
     Then fabric-cli is executed with args "ledgerconfig update --configfile ./fixtures/config/fabric/consortium-config.json --noprompt"
     And fabric-cli is executed with args "ledgerconfig update --configfile ./fixtures/config/fabric/org1-config.json --noprompt"
+    Given fabric-cli context "org2-context" is used
     And fabric-cli is executed with args "ledgerconfig update --configfile ./fixtures/config/fabric/org2-config.json --noprompt"
 
     Given variable "token_content_w" is assigned the value "TOKEN_CONTENT_W"
@@ -72,7 +73,9 @@ Feature: Upload files to DCAS which are backed by a Sidetree file index document
     And the JSON path "id" of the response is saved to variable "fileIdxID"
 
     # Update the file handler configuration for the '/content' path with the ID of the file index document
+    Given fabric-cli context "org1-context" is used
     Then fabric-cli is executed with args "ledgerconfig fileidxupdate --msp Org1MSP --peers peer0.org1.example.com;peer1.org1.example.com --path /content --idxid ${fileIdxID} --noprompt"
+    Given fabric-cli context "org2-context" is used
     And fabric-cli is executed with args "ledgerconfig fileidxupdate --msp Org2MSP --peers peer0.org2.example.com;peer1.org2.example.com --path /content --idxid ${fileIdxID} --noprompt"
 
     Then we wait 10 seconds
