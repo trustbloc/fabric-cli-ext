@@ -11,12 +11,12 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v0.0.6
 	github.com/stretchr/testify v1.5.1
-	github.com/trustbloc/sidetree-core-go v0.1.4-0.20200818145448-94243b40fa44
+	github.com/trustbloc/sidetree-core-go v0.1.4
 )
 
 go 1.13
 
-replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.4-0.20200626180529-18936b36feca
+replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.4
 
 replace github.com/sirupsen/logrus => github.com/sirupsen/logrus v1.3.0
 
