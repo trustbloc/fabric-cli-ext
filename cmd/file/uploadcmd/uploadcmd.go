@@ -183,7 +183,7 @@ type command struct {
 	contentAuthToken             string
 	basePath                     string
 	fileIndexURL                 string
-	fileIndexBaseURL             string
+	fileIndexUpdateURL           string
 	fileIndexSigningKeyFile      string
 	fileIndexSigningKeyString    string
 	fileIndexNextUpdateKeyFile   string
@@ -243,12 +243,12 @@ func (c *command) validateAndProcessFileIdxURL() error {
 		return errFileIndexURLRequired
 	}
 
-	pos := strings.LastIndex(c.fileIndexURL, "/")
+	pos := strings.LastIndex(c.fileIndexURL, "/identifiers")
 	if pos == -1 {
-		return errors.Errorf("invalid file index URL: [%s]", c.fileIndexURL)
+		return errors.Errorf("invalid file index URL: [%s] - the file index ID must be prefixed by identifiers/", c.fileIndexURL)
 	}
 
-	c.fileIndexBaseURL = c.fileIndexURL[0:pos]
+	c.fileIndexUpdateURL = fmt.Sprintf("%s/operations", c.fileIndexURL[0:pos])
 
 	return nil
 }
@@ -358,7 +358,7 @@ func (c *command) updateIndexFile(fileIdx *model.FileIndex, files files) error {
 		reqOpts = append(reqOpts, httpclient.WithAuthToken(c.authToken))
 	}
 
-	resp, err := c.client.Post(c.fileIndexBaseURL, req, reqOpts...)
+	resp, err := c.client.Post(c.fileIndexUpdateURL, req, reqOpts...)
 	if err != nil {
 		return err
 	}
@@ -423,7 +423,7 @@ func (c *command) getUpdateRequest(patchStr string) ([]byte, error) {
 		DidSuffix:        uniqueSuffix,
 		UpdateCommitment: updateCommitment,
 		UpdateKey:        updateKeyPublic,
-		Patch:            updatePatch,
+		Patches:          []patch.Patch{updatePatch},
 		MultihashCode:    sha2_256,
 		Signer:           updateKeySigner,
 	})

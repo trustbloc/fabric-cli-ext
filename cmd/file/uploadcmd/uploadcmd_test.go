@@ -48,7 +48,7 @@ func TestUloadCmd_InvalidOptions(t *testing.T) {
 		filesFlag             = "--files"
 		files                 = "./samplefile.json"
 		idxUrlFlag            = "--idxurl"
-		idxUrl                = "http://localhost:80/file/file:idx:1234"
+		idxUrl                = "http://localhost:80/file/identifiers/file:idx:1234"
 		nextUpdateKeyFlag     = "--nextupdatekey"
 		nextUpdateKeyFileFlag = "--nextupdatekeyfile"
 		signingkeyFlag        = "--signingkey"
@@ -100,7 +100,7 @@ func TestUploadCmd(t *testing.T) {
 	const (
 		url        = "http://localhost:48326/content/v1"
 		files      = "./testdata/person.schema.json"
-		idxUrl     = "http://localhost:48326/file/file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA=="
+		idxUrl     = "http://localhost:48326/file/identifiers/file:idx:EiAuN66iEpuRt6IIu-2sO3bRM74sS_AIuY6jTbtFUsqAaA=="
 		resp       = `[{"Name":"person.schema.json","ID":"TbVyraOqG00TacPQH5WwWGnxkszpYSEhBKRyX_f25JI=","ContentType":"application/json"}]`
 		dcasIDJSON = `"TbVyraOqG00TacPQH5WwWGnxkszpYSEhBKRyX_f25JI="`
 	)
