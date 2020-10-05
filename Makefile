@@ -26,7 +26,7 @@ PROJECT_NAME            = fabric-cli-ext
 ARCH                    = $(shell go env GOARCH)
 GO_VER                  = $(shell grep "GO_VER" .ci-properties |cut -d'=' -f2-)
 export GO111MODULE      = on
-export FABRIC_CLI_VERSION ?= 6d600d8656ddbb4116ee62c61658a5a5dbc87a32
+export FABRIC_CLI_VERSION ?= d9e3966b20ebbbffa9f63aa228960848b60d5ca9
 
 # Fabric tools docker image (overridable)
 FABRIC_TOOLS_IMAGE   ?= hyperledger/fabric-tools

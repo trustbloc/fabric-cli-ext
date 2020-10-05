@@ -225,6 +225,78 @@ type ResMgmt struct {
 		result1 fab.TransactionID
 		result2 error
 	}
+	LifecycleQueryInstalledCCStub        func(options ...resmgmt.RequestOption) ([]resmgmt.LifecycleInstalledCC, error)
+	lifecycleQueryInstalledCCMutex       sync.RWMutex
+	lifecycleQueryInstalledCCArgsForCall []struct {
+		options []resmgmt.RequestOption
+	}
+	lifecycleQueryInstalledCCReturns struct {
+		result1 []resmgmt.LifecycleInstalledCC
+		result2 error
+	}
+	lifecycleQueryInstalledCCReturnsOnCall map[int]struct {
+		result1 []resmgmt.LifecycleInstalledCC
+		result2 error
+	}
+	LifecycleGetInstalledCCPackageStub        func(packageID string, options ...resmgmt.RequestOption) ([]byte, error)
+	lifecycleGetInstalledCCPackageMutex       sync.RWMutex
+	lifecycleGetInstalledCCPackageArgsForCall []struct {
+		packageID string
+		options   []resmgmt.RequestOption
+	}
+	lifecycleGetInstalledCCPackageReturns struct {
+		result1 []byte
+		result2 error
+	}
+	lifecycleGetInstalledCCPackageReturnsOnCall map[int]struct {
+		result1 []byte
+		result2 error
+	}
+	LifecycleQueryApprovedCCStub        func(channelID string, req resmgmt.LifecycleQueryApprovedCCRequest, options ...resmgmt.RequestOption) (resmgmt.LifecycleApprovedChaincodeDefinition, error)
+	lifecycleQueryApprovedCCMutex       sync.RWMutex
+	lifecycleQueryApprovedCCArgsForCall []struct {
+		channelID string
+		req       resmgmt.LifecycleQueryApprovedCCRequest
+		options   []resmgmt.RequestOption
+	}
+	lifecycleQueryApprovedCCReturns struct {
+		result1 resmgmt.LifecycleApprovedChaincodeDefinition
+		result2 error
+	}
+	lifecycleQueryApprovedCCReturnsOnCall map[int]struct {
+		result1 resmgmt.LifecycleApprovedChaincodeDefinition
+		result2 error
+	}
+	LifecycleCheckCCCommitReadinessStub        func(channelID string, req resmgmt.LifecycleCheckCCCommitReadinessRequest, options ...resmgmt.RequestOption) (resmgmt.LifecycleCheckCCCommitReadinessResponse, error)
+	lifecycleCheckCCCommitReadinessMutex       sync.RWMutex
+	lifecycleCheckCCCommitReadinessArgsForCall []struct {
+		channelID string
+		req       resmgmt.LifecycleCheckCCCommitReadinessRequest
+		options   []resmgmt.RequestOption
+	}
+	lifecycleCheckCCCommitReadinessReturns struct {
+		result1 resmgmt.LifecycleCheckCCCommitReadinessResponse
+		result2 error
+	}
+	lifecycleCheckCCCommitReadinessReturnsOnCall map[int]struct {
+		result1 resmgmt.LifecycleCheckCCCommitReadinessResponse
+		result2 error
+	}
+	LifecycleQueryCommittedCCStub        func(channelID string, req resmgmt.LifecycleQueryCommittedCCRequest, options ...resmgmt.RequestOption) ([]resmgmt.LifecycleChaincodeDefinition, error)
+	lifecycleQueryCommittedCCMutex       sync.RWMutex
+	lifecycleQueryCommittedCCArgsForCall []struct {
+		channelID string
+		req       resmgmt.LifecycleQueryCommittedCCRequest
+		options   []resmgmt.RequestOption
+	}
+	lifecycleQueryCommittedCCReturns struct {
+		result1 []resmgmt.LifecycleChaincodeDefinition
+		result2 error
+	}
+	lifecycleQueryCommittedCCReturnsOnCall map[int]struct {
+		result1 []resmgmt.LifecycleChaincodeDefinition
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -1009,6 +1081,268 @@ func (fake *ResMgmt) LifecycleCommitCCReturnsOnCall(i int, result1 fab.Transacti
 	}{result1, result2}
 }
 
+func (fake *ResMgmt) LifecycleQueryInstalledCC(options ...resmgmt.RequestOption) ([]resmgmt.LifecycleInstalledCC, error) {
+	fake.lifecycleQueryInstalledCCMutex.Lock()
+	ret, specificReturn := fake.lifecycleQueryInstalledCCReturnsOnCall[len(fake.lifecycleQueryInstalledCCArgsForCall)]
+	fake.lifecycleQueryInstalledCCArgsForCall = append(fake.lifecycleQueryInstalledCCArgsForCall, struct {
+		options []resmgmt.RequestOption
+	}{options})
+	fake.recordInvocation("LifecycleQueryInstalledCC", []interface{}{options})
+	fake.lifecycleQueryInstalledCCMutex.Unlock()
+	if fake.LifecycleQueryInstalledCCStub != nil {
+		return fake.LifecycleQueryInstalledCCStub(options...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.lifecycleQueryInstalledCCReturns.result1, fake.lifecycleQueryInstalledCCReturns.result2
+}
+
+func (fake *ResMgmt) LifecycleQueryInstalledCCCallCount() int {
+	fake.lifecycleQueryInstalledCCMutex.RLock()
+	defer fake.lifecycleQueryInstalledCCMutex.RUnlock()
+	return len(fake.lifecycleQueryInstalledCCArgsForCall)
+}
+
+func (fake *ResMgmt) LifecycleQueryInstalledCCArgsForCall(i int) []resmgmt.RequestOption {
+	fake.lifecycleQueryInstalledCCMutex.RLock()
+	defer fake.lifecycleQueryInstalledCCMutex.RUnlock()
+	return fake.lifecycleQueryInstalledCCArgsForCall[i].options
+}
+
+func (fake *ResMgmt) LifecycleQueryInstalledCCReturns(result1 []resmgmt.LifecycleInstalledCC, result2 error) {
+	fake.LifecycleQueryInstalledCCStub = nil
+	fake.lifecycleQueryInstalledCCReturns = struct {
+		result1 []resmgmt.LifecycleInstalledCC
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ResMgmt) LifecycleQueryInstalledCCReturnsOnCall(i int, result1 []resmgmt.LifecycleInstalledCC, result2 error) {
+	fake.LifecycleQueryInstalledCCStub = nil
+	if fake.lifecycleQueryInstalledCCReturnsOnCall == nil {
+		fake.lifecycleQueryInstalledCCReturnsOnCall = make(map[int]struct {
+			result1 []resmgmt.LifecycleInstalledCC
+			result2 error
+		})
+	}
+	fake.lifecycleQueryInstalledCCReturnsOnCall[i] = struct {
+		result1 []resmgmt.LifecycleInstalledCC
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ResMgmt) LifecycleGetInstalledCCPackage(packageID string, options ...resmgmt.RequestOption) ([]byte, error) {
+	fake.lifecycleGetInstalledCCPackageMutex.Lock()
+	ret, specificReturn := fake.lifecycleGetInstalledCCPackageReturnsOnCall[len(fake.lifecycleGetInstalledCCPackageArgsForCall)]
+	fake.lifecycleGetInstalledCCPackageArgsForCall = append(fake.lifecycleGetInstalledCCPackageArgsForCall, struct {
+		packageID string
+		options   []resmgmt.RequestOption
+	}{packageID, options})
+	fake.recordInvocation("LifecycleGetInstalledCCPackage", []interface{}{packageID, options})
+	fake.lifecycleGetInstalledCCPackageMutex.Unlock()
+	if fake.LifecycleGetInstalledCCPackageStub != nil {
+		return fake.LifecycleGetInstalledCCPackageStub(packageID, options...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.lifecycleGetInstalledCCPackageReturns.result1, fake.lifecycleGetInstalledCCPackageReturns.result2
+}
+
+func (fake *ResMgmt) LifecycleGetInstalledCCPackageCallCount() int {
+	fake.lifecycleGetInstalledCCPackageMutex.RLock()
+	defer fake.lifecycleGetInstalledCCPackageMutex.RUnlock()
+	return len(fake.lifecycleGetInstalledCCPackageArgsForCall)
+}
+
+func (fake *ResMgmt) LifecycleGetInstalledCCPackageArgsForCall(i int) (string, []resmgmt.RequestOption) {
+	fake.lifecycleGetInstalledCCPackageMutex.RLock()
+	defer fake.lifecycleGetInstalledCCPackageMutex.RUnlock()
+	return fake.lifecycleGetInstalledCCPackageArgsForCall[i].packageID, fake.lifecycleGetInstalledCCPackageArgsForCall[i].options
+}
+
+func (fake *ResMgmt) LifecycleGetInstalledCCPackageReturns(result1 []byte, result2 error) {
+	fake.LifecycleGetInstalledCCPackageStub = nil
+	fake.lifecycleGetInstalledCCPackageReturns = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ResMgmt) LifecycleGetInstalledCCPackageReturnsOnCall(i int, result1 []byte, result2 error) {
+	fake.LifecycleGetInstalledCCPackageStub = nil
+	if fake.lifecycleGetInstalledCCPackageReturnsOnCall == nil {
+		fake.lifecycleGetInstalledCCPackageReturnsOnCall = make(map[int]struct {
+			result1 []byte
+			result2 error
+		})
+	}
+	fake.lifecycleGetInstalledCCPackageReturnsOnCall[i] = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ResMgmt) LifecycleQueryApprovedCC(channelID string, req resmgmt.LifecycleQueryApprovedCCRequest, options ...resmgmt.RequestOption) (resmgmt.LifecycleApprovedChaincodeDefinition, error) {
+	fake.lifecycleQueryApprovedCCMutex.Lock()
+	ret, specificReturn := fake.lifecycleQueryApprovedCCReturnsOnCall[len(fake.lifecycleQueryApprovedCCArgsForCall)]
+	fake.lifecycleQueryApprovedCCArgsForCall = append(fake.lifecycleQueryApprovedCCArgsForCall, struct {
+		channelID string
+		req       resmgmt.LifecycleQueryApprovedCCRequest
+		options   []resmgmt.RequestOption
+	}{channelID, req, options})
+	fake.recordInvocation("LifecycleQueryApprovedCC", []interface{}{channelID, req, options})
+	fake.lifecycleQueryApprovedCCMutex.Unlock()
+	if fake.LifecycleQueryApprovedCCStub != nil {
+		return fake.LifecycleQueryApprovedCCStub(channelID, req, options...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.lifecycleQueryApprovedCCReturns.result1, fake.lifecycleQueryApprovedCCReturns.result2
+}
+
+func (fake *ResMgmt) LifecycleQueryApprovedCCCallCount() int {
+	fake.lifecycleQueryApprovedCCMutex.RLock()
+	defer fake.lifecycleQueryApprovedCCMutex.RUnlock()
+	return len(fake.lifecycleQueryApprovedCCArgsForCall)
+}
+
+func (fake *ResMgmt) LifecycleQueryApprovedCCArgsForCall(i int) (string, resmgmt.LifecycleQueryApprovedCCRequest, []resmgmt.RequestOption) {
+	fake.lifecycleQueryApprovedCCMutex.RLock()
+	defer fake.lifecycleQueryApprovedCCMutex.RUnlock()
+	return fake.lifecycleQueryApprovedCCArgsForCall[i].channelID, fake.lifecycleQueryApprovedCCArgsForCall[i].req, fake.lifecycleQueryApprovedCCArgsForCall[i].options
+}
+
+func (fake *ResMgmt) LifecycleQueryApprovedCCReturns(result1 resmgmt.LifecycleApprovedChaincodeDefinition, result2 error) {
+	fake.LifecycleQueryApprovedCCStub = nil
+	fake.lifecycleQueryApprovedCCReturns = struct {
+		result1 resmgmt.LifecycleApprovedChaincodeDefinition
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ResMgmt) LifecycleQueryApprovedCCReturnsOnCall(i int, result1 resmgmt.LifecycleApprovedChaincodeDefinition, result2 error) {
+	fake.LifecycleQueryApprovedCCStub = nil
+	if fake.lifecycleQueryApprovedCCReturnsOnCall == nil {
+		fake.lifecycleQueryApprovedCCReturnsOnCall = make(map[int]struct {
+			result1 resmgmt.LifecycleApprovedChaincodeDefinition
+			result2 error
+		})
+	}
+	fake.lifecycleQueryApprovedCCReturnsOnCall[i] = struct {
+		result1 resmgmt.LifecycleApprovedChaincodeDefinition
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ResMgmt) LifecycleCheckCCCommitReadiness(channelID string, req resmgmt.LifecycleCheckCCCommitReadinessRequest, options ...resmgmt.RequestOption) (resmgmt.LifecycleCheckCCCommitReadinessResponse, error) {
+	fake.lifecycleCheckCCCommitReadinessMutex.Lock()
+	ret, specificReturn := fake.lifecycleCheckCCCommitReadinessReturnsOnCall[len(fake.lifecycleCheckCCCommitReadinessArgsForCall)]
+	fake.lifecycleCheckCCCommitReadinessArgsForCall = append(fake.lifecycleCheckCCCommitReadinessArgsForCall, struct {
+		channelID string
+		req       resmgmt.LifecycleCheckCCCommitReadinessRequest
+		options   []resmgmt.RequestOption
+	}{channelID, req, options})
+	fake.recordInvocation("LifecycleCheckCCCommitReadiness", []interface{}{channelID, req, options})
+	fake.lifecycleCheckCCCommitReadinessMutex.Unlock()
+	if fake.LifecycleCheckCCCommitReadinessStub != nil {
+		return fake.LifecycleCheckCCCommitReadinessStub(channelID, req, options...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.lifecycleCheckCCCommitReadinessReturns.result1, fake.lifecycleCheckCCCommitReadinessReturns.result2
+}
+
+func (fake *ResMgmt) LifecycleCheckCCCommitReadinessCallCount() int {
+	fake.lifecycleCheckCCCommitReadinessMutex.RLock()
+	defer fake.lifecycleCheckCCCommitReadinessMutex.RUnlock()
+	return len(fake.lifecycleCheckCCCommitReadinessArgsForCall)
+}
+
+func (fake *ResMgmt) LifecycleCheckCCCommitReadinessArgsForCall(i int) (string, resmgmt.LifecycleCheckCCCommitReadinessRequest, []resmgmt.RequestOption) {
+	fake.lifecycleCheckCCCommitReadinessMutex.RLock()
+	defer fake.lifecycleCheckCCCommitReadinessMutex.RUnlock()
+	return fake.lifecycleCheckCCCommitReadinessArgsForCall[i].channelID, fake.lifecycleCheckCCCommitReadinessArgsForCall[i].req, fake.lifecycleCheckCCCommitReadinessArgsForCall[i].options
+}
+
+func (fake *ResMgmt) LifecycleCheckCCCommitReadinessReturns(result1 resmgmt.LifecycleCheckCCCommitReadinessResponse, result2 error) {
+	fake.LifecycleCheckCCCommitReadinessStub = nil
+	fake.lifecycleCheckCCCommitReadinessReturns = struct {
+		result1 resmgmt.LifecycleCheckCCCommitReadinessResponse
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ResMgmt) LifecycleCheckCCCommitReadinessReturnsOnCall(i int, result1 resmgmt.LifecycleCheckCCCommitReadinessResponse, result2 error) {
+	fake.LifecycleCheckCCCommitReadinessStub = nil
+	if fake.lifecycleCheckCCCommitReadinessReturnsOnCall == nil {
+		fake.lifecycleCheckCCCommitReadinessReturnsOnCall = make(map[int]struct {
+			result1 resmgmt.LifecycleCheckCCCommitReadinessResponse
+			result2 error
+		})
+	}
+	fake.lifecycleCheckCCCommitReadinessReturnsOnCall[i] = struct {
+		result1 resmgmt.LifecycleCheckCCCommitReadinessResponse
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ResMgmt) LifecycleQueryCommittedCC(channelID string, req resmgmt.LifecycleQueryCommittedCCRequest, options ...resmgmt.RequestOption) ([]resmgmt.LifecycleChaincodeDefinition, error) {
+	fake.lifecycleQueryCommittedCCMutex.Lock()
+	ret, specificReturn := fake.lifecycleQueryCommittedCCReturnsOnCall[len(fake.lifecycleQueryCommittedCCArgsForCall)]
+	fake.lifecycleQueryCommittedCCArgsForCall = append(fake.lifecycleQueryCommittedCCArgsForCall, struct {
+		channelID string
+		req       resmgmt.LifecycleQueryCommittedCCRequest
+		options   []resmgmt.RequestOption
+	}{channelID, req, options})
+	fake.recordInvocation("LifecycleQueryCommittedCC", []interface{}{channelID, req, options})
+	fake.lifecycleQueryCommittedCCMutex.Unlock()
+	if fake.LifecycleQueryCommittedCCStub != nil {
+		return fake.LifecycleQueryCommittedCCStub(channelID, req, options...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.lifecycleQueryCommittedCCReturns.result1, fake.lifecycleQueryCommittedCCReturns.result2
+}
+
+func (fake *ResMgmt) LifecycleQueryCommittedCCCallCount() int {
+	fake.lifecycleQueryCommittedCCMutex.RLock()
+	defer fake.lifecycleQueryCommittedCCMutex.RUnlock()
+	return len(fake.lifecycleQueryCommittedCCArgsForCall)
+}
+
+func (fake *ResMgmt) LifecycleQueryCommittedCCArgsForCall(i int) (string, resmgmt.LifecycleQueryCommittedCCRequest, []resmgmt.RequestOption) {
+	fake.lifecycleQueryCommittedCCMutex.RLock()
+	defer fake.lifecycleQueryCommittedCCMutex.RUnlock()
+	return fake.lifecycleQueryCommittedCCArgsForCall[i].channelID, fake.lifecycleQueryCommittedCCArgsForCall[i].req, fake.lifecycleQueryCommittedCCArgsForCall[i].options
+}
+
+func (fake *ResMgmt) LifecycleQueryCommittedCCReturns(result1 []resmgmt.LifecycleChaincodeDefinition, result2 error) {
+	fake.LifecycleQueryCommittedCCStub = nil
+	fake.lifecycleQueryCommittedCCReturns = struct {
+		result1 []resmgmt.LifecycleChaincodeDefinition
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ResMgmt) LifecycleQueryCommittedCCReturnsOnCall(i int, result1 []resmgmt.LifecycleChaincodeDefinition, result2 error) {
+	fake.LifecycleQueryCommittedCCStub = nil
+	if fake.lifecycleQueryCommittedCCReturnsOnCall == nil {
+		fake.lifecycleQueryCommittedCCReturnsOnCall = make(map[int]struct {
+			result1 []resmgmt.LifecycleChaincodeDefinition
+			result2 error
+		})
+	}
+	fake.lifecycleQueryCommittedCCReturnsOnCall[i] = struct {
+		result1 []resmgmt.LifecycleChaincodeDefinition
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *ResMgmt) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -1042,6 +1376,16 @@ func (fake *ResMgmt) Invocations() map[string][][]interface{} {
 	defer fake.lifecycleApproveCCMutex.RUnlock()
 	fake.lifecycleCommitCCMutex.RLock()
 	defer fake.lifecycleCommitCCMutex.RUnlock()
+	fake.lifecycleQueryInstalledCCMutex.RLock()
+	defer fake.lifecycleQueryInstalledCCMutex.RUnlock()
+	fake.lifecycleGetInstalledCCPackageMutex.RLock()
+	defer fake.lifecycleGetInstalledCCPackageMutex.RUnlock()
+	fake.lifecycleQueryApprovedCCMutex.RLock()
+	defer fake.lifecycleQueryApprovedCCMutex.RUnlock()
+	fake.lifecycleCheckCCCommitReadinessMutex.RLock()
+	defer fake.lifecycleCheckCCCommitReadinessMutex.RUnlock()
+	fake.lifecycleQueryCommittedCCMutex.RLock()
+	defer fake.lifecycleQueryCommittedCCMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
