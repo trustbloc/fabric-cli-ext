@@ -28,9 +28,9 @@ import (
 	"github.com/trustbloc/sidetree-core-go/pkg/commitment"
 	"github.com/trustbloc/sidetree-core-go/pkg/jws"
 	"github.com/trustbloc/sidetree-core-go/pkg/patch"
-	"github.com/trustbloc/sidetree-core-go/pkg/restapi/helper"
 	"github.com/trustbloc/sidetree-core-go/pkg/util/ecsigner"
 	"github.com/trustbloc/sidetree-core-go/pkg/util/pubkey"
+	"github.com/trustbloc/sidetree-core-go/pkg/versions/0_1/client"
 
 	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
 	"github.com/trustbloc/fabric-cli-ext/cmd/file/httpclient"
@@ -419,7 +419,7 @@ func (c *command) getUpdateRequest(patchStr string) ([]byte, error) {
 		return nil, err
 	}
 
-	return helper.NewUpdateRequest(&helper.UpdateRequestInfo{
+	return client.NewUpdateRequest(&client.UpdateRequestInfo{
 		DidSuffix:        uniqueSuffix,
 		UpdateCommitment: updateCommitment,
 		UpdateKey:        updateKeyPublic,
@@ -477,7 +477,7 @@ func (c *command) getFileIndex() (*model.FileIndex, error) {
 	return &fileIdxDoc.FileIndex, nil
 }
 
-func (c *command) updateKeySigner() (helper.Signer, error) {
+func (c *command) updateKeySigner() (client.Signer, error) {
 	privateKey, err := c.signingPrivateKey()
 	if err != nil {
 		return nil, err
