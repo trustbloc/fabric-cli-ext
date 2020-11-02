@@ -22,8 +22,8 @@ import (
 	"github.com/trustbloc/sidetree-core-go/pkg/commitment"
 	"github.com/trustbloc/sidetree-core-go/pkg/document"
 	"github.com/trustbloc/sidetree-core-go/pkg/jws"
-	"github.com/trustbloc/sidetree-core-go/pkg/restapi/helper"
 	"github.com/trustbloc/sidetree-core-go/pkg/util/pubkey"
+	"github.com/trustbloc/sidetree-core-go/pkg/versions/0_1/client"
 
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
@@ -289,8 +289,8 @@ func (c *command) newCreateRequest(content string) ([]byte, error) {
 		return nil, err
 	}
 
-	return helper.NewCreateRequest(
-		&helper.CreateRequestInfo{
+	return client.NewCreateRequest(
+		&client.CreateRequestInfo{
 			OpaqueDocument:     doc,
 			RecoveryCommitment: recoveryCommitment,
 			UpdateCommitment:   updateCommitment,
