@@ -274,7 +274,7 @@ func (c *command) newCreateRequest(content string) ([]byte, error) {
 		return nil, err
 	}
 
-	recoveryCommitment, err := commitment.Calculate(recoveryKey, sha2_256, crypto.SHA256)
+	recoveryCommitment, err := commitment.Calculate(recoveryKey, sha2_256)
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +284,7 @@ func (c *command) newCreateRequest(content string) ([]byte, error) {
 		return nil, err
 	}
 
-	updateCommitment, err := commitment.Calculate(updateKey, sha2_256, crypto.SHA256)
+	updateCommitment, err := commitment.Calculate(updateKey, sha2_256)
 	if err != nil {
 		return nil, err
 	}

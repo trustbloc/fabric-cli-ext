@@ -97,9 +97,8 @@ const (
 	msgAborted         = "Operation aborted"
 	msgContinueOrAbort = "Enter Y to continue or N to abort "
 
-	// default hashes for sidetree
-	sha2_256 = 18 // multihash
-	sha256   = 5  // hash
+	// default multihash for Sidetree
+	sha2_256 = 18
 
 	signingAlgorithm = "ES256"
 
@@ -414,7 +413,7 @@ func (c *command) getUpdateRequest(patchStr string) ([]byte, error) {
 		return nil, err
 	}
 
-	updateCommitment, err := commitment.Calculate(nextUpdateKeyPublic, sha2_256, sha256)
+	updateCommitment, err := commitment.Calculate(nextUpdateKeyPublic, sha2_256)
 	if err != nil {
 		return nil, err
 	}
