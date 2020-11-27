@@ -482,7 +482,7 @@ func (c *command) updateKeySigner() (client.Signer, error) {
 		return nil, err
 	}
 
-	return ecsigner.New(privateKey, signingAlgorithm, model.UpdateKeyID), nil
+	return ecsigner.New(privateKey, signingAlgorithm, ""), nil
 }
 
 func (c *command) updateKeyPublic() (*jws.JWK, error) {

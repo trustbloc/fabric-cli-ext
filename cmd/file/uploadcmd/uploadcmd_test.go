@@ -174,7 +174,7 @@ func TestUploadCmd(t *testing.T) {
 
 		t.Run("Success", func(t *testing.T) {
 			w := &mocks.Writer{}
-			c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, append(args, "--signingkeyfile", "../testdata/update_private.key")...)
+			c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, append(args, "--signingkeyfile", "../testdata/update2_private.key")...)
 			require.NoError(t, c.Execute())
 			require.NotContains(t, w.Written(), msgContinueOrAbort)
 			require.Contains(t, w.Written(), resp)
@@ -196,7 +196,7 @@ func TestUploadCmd(t *testing.T) {
 
 		t.Run("Success", func(t *testing.T) {
 			w := &mocks.Writer{}
-			c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, append(args, "--nextupdatekeyfile", "../testdata/update_public.key")...)
+			c := newMockCmdWithReaderWriter(t, &mocks.Reader{Bytes: []byte("Y\n")}, w, transport, append(args, "--nextupdatekeyfile", "../testdata/update2_public.key")...)
 			require.NoError(t, c.Execute())
 			require.NotContains(t, w.Written(), msgContinueOrAbort)
 			require.Contains(t, w.Written(), resp)
