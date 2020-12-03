@@ -11,7 +11,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v0.0.6
 	github.com/stretchr/testify v1.5.1
-	github.com/trustbloc/sidetree-core-go v0.1.5-0.20201126220537-656a5c8a3bdf
+	github.com/trustbloc/sidetree-core-go v0.1.5-0.20201203160228-bad37e299892
 )
 
 go 1.13
