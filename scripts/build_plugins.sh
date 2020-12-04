@@ -21,7 +21,7 @@ git checkout $FABRIC_CLI_VERSION
 
 if [ ${envOS} = 'Darwin' ]; then
 /usr/bin/sed -i '' '$a\
-replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.5-0.20201005203042-9fe8149374fc
+replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.5
 ' go.mod
 /usr/bin/sed -i '' '$a\
 replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678
@@ -51,7 +51,7 @@ replace golang.org/x/net => golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 replace github.com/spf13/cobra => github.com/spf13/cobra v0.0.6
 ' go.mod
 else
-sed  -e "\$areplace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.5-0.20201005203042-9fe8149374fc" -i go.mod
+sed  -e "\$areplace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.5" -i go.mod
 sed  -e "\$areplace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678" -i go.mod
 sed  -e "\$areplace golang.org/x/sys => golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5" -i go.mod
 sed  -e "\$areplace gopkg.in/check.v1 => gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127" -i go.mod
