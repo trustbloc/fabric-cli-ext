@@ -350,7 +350,7 @@ func TestContentTypeFromFileName(t *testing.T) {
 
 	t.Run("No extension -> error", func(t *testing.T) {
 		contentType, err := contentTypeFromFileName("file.xxx")
-		require.EqualError(t, err, errUnknownExtension.Error())
+		require.EqualError(t, err, "file.xxx: content type cannot be deduced from extension")
 		require.Empty(t, contentType)
 	})
 }

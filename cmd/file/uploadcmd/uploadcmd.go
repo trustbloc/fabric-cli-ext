@@ -605,7 +605,7 @@ func contentTypeFromFileName(fileName string) (string, error) {
 
 	contentType := mime.TypeByExtension(fileName[p:])
 	if contentType == "" {
-		return "", errUnknownExtension
+		return "", errors.WithMessagef(errUnknownExtension, fileName)
 	}
 
 	return contentType, nil
