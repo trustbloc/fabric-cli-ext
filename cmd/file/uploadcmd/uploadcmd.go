@@ -413,13 +413,19 @@ func (c *command) getUpdateRequest(patchStr string) ([]byte, error) {
 		return nil, err
 	}
 
-	updateCommitment, err := commitment.Calculate(nextUpdateKeyPublic, sha2_256)
+	updateCommitment, err := commitment.GetCommitment(nextUpdateKeyPublic, sha2_256)
+	if err != nil {
+		return nil, err
+	}
+
+	revealValue, err := commitment.GetRevealValue(updateKeyPublic, sha2_256)
 	if err != nil {
 		return nil, err
 	}
 
 	return client.NewUpdateRequest(&client.UpdateRequestInfo{
 		DidSuffix:        uniqueSuffix,
+		RevealValue:      revealValue,
 		UpdateCommitment: updateCommitment,
 		UpdateKey:        updateKeyPublic,
 		Patches:          []patch.Patch{updatePatch},
