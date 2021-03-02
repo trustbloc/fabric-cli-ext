@@ -23,7 +23,7 @@ import (
 	"github.com/trustbloc/sidetree-core-go/pkg/document"
 	"github.com/trustbloc/sidetree-core-go/pkg/jws"
 	"github.com/trustbloc/sidetree-core-go/pkg/util/pubkey"
-	"github.com/trustbloc/sidetree-core-go/pkg/versions/0_1/client"
+	"github.com/trustbloc/sidetree-core-go/pkg/versions/1_0/client"
 
 	"github.com/hyperledger/fabric-cli/pkg/environment"
 	"github.com/trustbloc/fabric-cli-ext/cmd/basecmd"
