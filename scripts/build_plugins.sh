@@ -79,9 +79,11 @@ cd ./fabric-cli-ext
 
 if [ ${envOS} = 'Darwin' ]; then
 /usr/bin/sed -i ''  '$a\
-replace github.com/hyperledger/fabric-cli => ..\/fabric-cli' go.mod
+replace github.com/hyperledger/fabric-cli => ..\/fabric-cli
+' go.mod
 /usr/bin/sed -i ''  '$a\
-replace github.com/sirupsen/logrus => github.com/sirupsen/logrus v1.3.0' go.mod
+replace github.com/sirupsen/logrus => github.com/sirupsen/logrus v1.3.0
+' go.mod
 else
 sed  -e "\$areplace github.com/hyperledger/fabric-cli => ..\/fabric-cli" -i go.mod
 sed  -e "\$areplace github.com/sirupsen/logrus => github.com/sirupsen/logrus v1.3.0" -i go.mod
